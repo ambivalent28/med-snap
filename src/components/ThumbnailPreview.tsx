@@ -1,4 +1,4 @@
-import { DocumentIcon, PhotoIcon } from '@heroicons/react/24/solid';
+import { DocumentIcon } from '@heroicons/react/24/solid';
 import React, { useEffect, useState } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 

@@ -1,5 +1,4 @@
-import { VercelRequest, VercelResponse } from '@vercel/node';
-import Stripe from 'stripe';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 export default async function handler(
   req: VercelRequest,
@@ -19,15 +18,23 @@ export default async function handler(
   }
 
   try {
-    // Check for Stripe secret key
-    if (!process.env.STRIPE_SECRET_KEY) {
-      console.error('STRIPE_SECRET_KEY is missing from environment variables');
+    // Check for Stripe secret key first
+    const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeSecretKey) {
+      console.error('STRIPE_SECRET_KEY is missing');
       return res.status(500).json({ 
-        error: 'Server configuration error: Stripe secret key not found. Please check Vercel environment variables.' 
+        error: 'Stripe secret key not configured. Add STRIPE_SECRET_KEY to Vercel environment variables.' 
       });
     }
 
-    const { priceId, userId } = req.body;
+    // Dynamic import Stripe to avoid initialization errors
+    const Stripe = (await import('stripe')).default;
+    
+    const stripe = new Stripe(stripeSecretKey, {
+      apiVersion: '2023-10-16', // Use stable API version
+    });
+
+    const { priceId, userId } = req.body || {};
 
     if (!priceId) {
       return res.status(400).json({ error: 'Missing priceId in request body' });
@@ -37,15 +44,11 @@ export default async function handler(
       return res.status(400).json({ error: 'Missing userId in request body' });
     }
 
-    // Initialize Stripe
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2024-12-18.acacia',
-    });
-
     // Get origin from request headers
-    const origin = req.headers.origin || req.headers.host 
-      ? `https://${req.headers.host}` 
-      : 'https://medsnap.app';
+    const origin = req.headers.origin || 
+      (req.headers.host ? `https://${req.headers.host}` : 'https://medsnap.vercel.app');
+
+    console.log('Creating checkout session:', { priceId, userId, origin });
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -64,19 +67,12 @@ export default async function handler(
       },
     });
 
+    console.log('Checkout session created:', session.id);
     return res.status(200).json({ sessionId: session.id });
-  } catch (error) {
-    console.error('Stripe checkout session error:', error);
+  } catch (error: unknown) {
+    console.error('Checkout session error:', error);
     
-    // Provide more detailed error information
-    if (error instanceof Stripe.errors.StripeError) {
-      return res.status(500).json({ 
-        error: `Stripe error: ${error.message}` 
-      });
-    }
-    
-    return res.status(500).json({ 
-      error: error instanceof Error ? error.message : 'Failed to create checkout session' 
-    });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    return res.status(500).json({ error: errorMessage });
   }
 }

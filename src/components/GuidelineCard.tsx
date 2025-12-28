@@ -1,90 +1,65 @@
-import {
-  DocumentIcon,
-  PhotoIcon,
-  TagIcon,
-  CalendarDaysIcon,
-  TrashIcon
-} from '@heroicons/react/24/solid';
-import { format } from 'date-fns';
+import { TrashIcon } from '@heroicons/react/24/solid';
 import React from 'react';
 import type { Guideline } from '../types';
+import ThumbnailPreview from './ThumbnailPreview';
 
 interface Props {
   guideline: Guideline;
   onOpen: (guideline: Guideline) => void;
   onDelete?: (guideline: Guideline) => void;
+  draggable?: boolean;
 }
 
-const GuidelineCard: React.FC<Props> = ({ guideline, onOpen, onDelete }) => {
-  const isPdf = guideline.file_type === 'pdf';
-  const isWord = guideline.file_type === 'word';
-
+const GuidelineCard: React.FC<Props> = ({ guideline, onOpen, onDelete, draggable = true }) => {
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onDelete && window.confirm(`Are you sure you want to delete "${guideline.title}"?`)) {
+    if (onDelete && window.confirm(`Delete "${guideline.title}"?`)) {
       onDelete(guideline);
     }
   };
 
+  const handleDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('guidelineId', guideline.id);
+    e.dataTransfer.setData('guidelineTitle', guideline.title);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
   return (
     <div
-      className="group relative flex h-full flex-col rounded-2xl border border-slate-700 bg-slate-800 p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-600 hover:shadow-lg cursor-pointer"
+      className="group relative flex h-full flex-col rounded-xl border border-slate-700 bg-slate-800 p-3 transition-all duration-200 hover:border-brand-600/50 hover:shadow-lg hover:shadow-brand-900/10 cursor-pointer"
       role="button"
       onClick={() => onOpen(guideline)}
+      draggable={draggable}
+      onDragStart={handleDragStart}
     >
       {onDelete && (
         <button
           onClick={handleDelete}
-          className="absolute right-2 top-2 rounded-full bg-red-900/50 border border-red-700 p-1.5 text-red-400 opacity-0 transition hover:bg-red-900/70 group-hover:opacity-100"
+          className="absolute right-2 top-2 z-10 rounded-full bg-red-900/90 border border-red-700 p-1.5 text-red-400 opacity-0 transition hover:bg-red-800 group-hover:opacity-100"
           title="Delete"
         >
           <TrashIcon className="h-4 w-4" />
         </button>
       )}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2">
-          {isPdf || isWord ? (
-            <DocumentIcon className="h-6 w-6 text-brand-500" />
-          ) : (
-            <PhotoIcon className="h-6 w-6 text-brand-500" />
-          )}
-          <div className="truncate text-sm font-semibold text-slate-100" title={guideline.title}>
-            {guideline.title}
-          </div>
-        </div>
-        <span className="rounded-full bg-brand-900/50 border border-brand-700 px-2 py-1 text-[11px] font-medium text-brand-300">
-          {guideline.file_type.toUpperCase()}
-        </span>
+      
+      <div className="mb-3">
+        <ThumbnailPreview 
+          filePath={guideline.file_path} 
+          fileType={guideline.file_type} 
+          title={guideline.title} 
+        />
       </div>
-      <p className="mt-2 line-clamp-2 text-sm text-slate-400">
-        {guideline.notes || 'No notes'}
-      </p>
-      <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-400">
-        <div className="flex items-center gap-1">
-          <CalendarDaysIcon className="h-4 w-4" />
-          <span>{format(new Date(guideline.created_at), 'MMM d, yyyy')}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <TagIcon className="h-4 w-4" />
-          <div className="flex flex-wrap gap-1">
-            {guideline.tags.length ? (
-              guideline.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full bg-slate-700 px-2 py-0.5 text-[11px] font-medium text-slate-300"
-                >
-                  {tag}
-                </span>
-              ))
-            ) : (
-              <span className="text-slate-500">No tags</span>
-            )}
-          </div>
-        </div>
+      
+      <div className="flex-1">
+        <h4 className="text-sm font-semibold text-slate-200 truncate" title={guideline.title}>
+          {guideline.title}
+        </h4>
+        <p className="text-[11px] text-slate-500 mt-1">
+          {guideline.category || 'General'} • {guideline.file_type.toUpperCase()}
+        </p>
       </div>
     </div>
   );
 };
 
 export default GuidelineCard;
-

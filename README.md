@@ -1,46 +1,70 @@
 # MedSnap
 
-Desktop-first personal clinical reference vault. Upload PDFs and images, organize with categories/tags, and view inline (no downloads). Backend targets Supabase; frontend is Vite + React + TypeScript + Tailwind.
+A personal clinical reference library for healthcare professionals. Upload PDFs, Word documents, and images, organize them by category, and access them from anywhere.
 
-## Tech stack
+## Features
+
+- **Upload** PDFs, Word docs (DOC/DOCX), and images
+- **Organize** with custom categories
+- **Search** by title or notes
+- **View** documents directly in browser
+- **Access** from any device
+
+## Tech Stack
+
 - React + Vite + TypeScript
 - Tailwind CSS
 - Supabase (Auth, Postgres, Storage)
-- `react-pdf`/`pdf.js` for inline PDFs
+- Stripe (Payments)
+- PDF.js for inline PDF viewing
+- Mammoth.js for Word document rendering
 
-## Getting started
-1) Install deps  
-```
+## Setup
+
+### 1. Install dependencies
+
+```bash
 npm install
 ```
-2) Env vars  
-Copy `env.example` to `.env` and set:
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_ANON_KEY`
-3) Run dev server  
+
+### 2. Configure environment variables
+
+Create a `.env` file with:
+
 ```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+VITE_STRIPE_PRICE_ID_MONTHLY=your_monthly_price_id
+VITE_STRIPE_PRICE_ID_YEARLY=your_yearly_price_id
+```
+
+### 3. Set up Supabase
+
+1. Create a new Supabase project
+2. Run the migrations in `supabase/migrations/` in order
+3. Create a Storage bucket named `guidelines`
+4. Enable Email/Password auth in Auth settings
+
+See `SUPABASE_SETUP.md` for detailed instructions.
+
+### 4. Run development server
+
+```bash
 npm run dev
 ```
-4) Build  
+
+### 5. Build for production
+
+```bash
+npm run build
 ```
-npm run build && npm run preview
-```
 
-## Supabase setup
-- Run the SQL in `supabase/schema.sql` in your project to create tables/policies.
-- Create a Storage bucket named `guidelines` with public access for PDFs/images.
-- Enable Email/Password and Google OAuth in Supabase Auth settings.
+## Pricing
 
-## App notes
-- Desktop-first layout with category sidebar + grid of guideline cards.
-- Inline viewing only (no download buttons). PDFs render via `react-pdf`; images inline.
-- Upload flow: drag-and-drop, required title, optional tags/notes/source URL, and required “no patient info” checkbox.
-- Long titles are truncated with ellipsis on cards; tags and dates visible.
-- Search filters by title, tags, and notes; category filter is single-select.
+- **Free**: 10 uploads, full access
+- **Pro**: Unlimited uploads ($5/month or $25/year)
 
-## Next steps to wire Supabase
-- Replace the placeholder upload logic in `src/App.tsx` with Supabase Storage uploads and DB inserts.
-- Add auth flows (email/password + Google) using `@supabase/supabase-js` (session handling, protected routes).
-- Swap `URL.createObjectURL` with the public URL returned from Storage for inline viewing.
-- Add pagination or infinite scroll if the library grows large.
+## License
 
+Private. All rights reserved.

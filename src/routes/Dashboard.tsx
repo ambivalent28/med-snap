@@ -1,19 +1,19 @@
-import { PlusIcon } from '@heroicons/react/24/solid';
+import { PlusIcon, ArrowsUpDownIcon } from '@heroicons/react/24/solid';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GuidelineCard from '../components/GuidelineCard';
+import LimitReachedBanner from '../components/LimitReachedBanner';
 import PricingModal from '../components/PricingModal';
 import SearchBar from '../components/SearchBar';
 import Sidebar from '../components/Sidebar';
 import UploadModal from '../components/UploadModal';
-import UsageIndicator from '../components/UsageIndicator';
 import ViewerModal from '../components/ViewerModal';
 import { useAuth } from '../hooks/useAuth';
 import { deleteFile, getSignedUrl, uploadFile } from '../lib/storage';
 import { supabase } from '../lib/supabase';
 import type { Guideline, UploadFormValues } from '../types';
 
-const FREE_UPLOAD_LIMIT = 5;
+const FREE_UPLOAD_LIMIT = 10;
 
 export default function Dashboard() {
   const { user, signOut, loading: authLoading } = useAuth();
@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [guidelines, setGuidelines] = useState<Guideline[]>([]);
   const [category, setCategory] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'alpha-asc' | 'alpha-desc'>('date-desc');
   const [uploadOpen, setUploadOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
@@ -120,36 +121,49 @@ export default function Dashboard() {
   };
 
   const categories = useMemo(() => {
-    const set = new Set(guidelines.map((g) => g.category || 'General'));
-    // Always include 'General' as a default category
+    const set = new Set(guidelines.map((g) => g.category).filter(c => c && c.trim() !== ''));
     set.add('General');
     return Array.from(set).sort();
   }, [guidelines]);
 
   const filtered = useMemo(() => {
     const term = search.toLowerCase();
-    return guidelines.filter((g) => {
+    const filteredList = guidelines.filter((g) => {
       const matchesCategory = !category || g.category === category;
       const matchesSearch =
         g.title.toLowerCase().includes(term) ||
-        g.notes?.toLowerCase().includes(term) ||
-        g.tags.some((t) => t.toLowerCase().includes(term));
+        g.notes?.toLowerCase().includes(term);
       return matchesCategory && matchesSearch;
     });
-  }, [guidelines, category, search]);
+
+    // Apply sorting
+    return filteredList.sort((a, b) => {
+      switch (sortBy) {
+        case 'date-desc':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'date-asc':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case 'alpha-asc':
+          return a.title.localeCompare(b.title);
+        case 'alpha-desc':
+          return b.title.localeCompare(a.title);
+        default:
+          return 0;
+      }
+    });
+  }, [guidelines, category, search, sortBy]);
 
   const handleUpload = async (file: File, form: UploadFormValues) => {
     if (!user) {
       throw new Error('You must be logged in to upload files');
     }
 
-    // Check upload limit
-    const uploadCount = profile?.upload_count ?? guidelines.length;
+    // Check upload limit - use actual guidelines count for accuracy
     const subscriptionStatus = profile?.subscription_status;
     const isFree = !subscriptionStatus || subscriptionStatus === 'inactive';
     const uploadLimit = isFree ? FREE_UPLOAD_LIMIT : Infinity;
 
-    if (uploadCount >= uploadLimit) {
+    if (guidelines.length >= uploadLimit) {
       setPricingOpen(true);
       throw new Error(`You've reached your upload limit. Please upgrade to Pro for unlimited uploads.`);
     }
@@ -307,6 +321,127 @@ export default function Dashboard() {
     }
   };
 
+  const handleUpdateGuidelineCategory = async (guidelineId: string, newCategory: string) => {
+    if (!user) return;
+
+    try {
+      // Update in database
+      const { error } = await supabase
+        .from('guidelines')
+        .update({ category: newCategory })
+        .eq('id', guidelineId)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error updating guideline category:', error);
+        alert('Failed to update category. Please try again.');
+        return;
+      }
+
+      setGuidelines((prev) =>
+        prev.map((g) => g.id === guidelineId ? { ...g, category: newCategory } : g)
+      );
+    } catch (error) {
+      console.error('Error updating guideline category:', error);
+      alert('Failed to update category. Please try again.');
+    }
+  };
+
+  const handleUpdateGuideline = async (guideline: Guideline, updates: Partial<Guideline>, newFile?: File) => {
+    if (!user) return;
+
+    try {
+      let newFilePath = guideline.file_path;
+      let newFileType = guideline.file_type;
+
+      // If a new file is provided, upload it and delete the old one
+      if (newFile) {
+        // Determine file type
+        if (newFile.type === 'application/pdf') {
+          newFileType = 'pdf';
+        } else if (newFile.type.includes('word') || newFile.type.includes('msword')) {
+          newFileType = 'word';
+        } else {
+          newFileType = 'image';
+        }
+
+        // Create unique file path
+        const timestamp = Date.now();
+        const sanitizedFileName = newFile.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const filePath = `${user.id}/${timestamp}-${sanitizedFileName}`;
+
+        // Upload new file
+        const { path, error: uploadError } = await uploadFile('guidelines', filePath, newFile);
+        
+        if (uploadError) {
+          throw new Error(`File upload failed: ${uploadError.message}`);
+        }
+
+        // Delete old file (extract path from URL if needed)
+        try {
+          let oldFilePath = guideline.file_path;
+          try {
+            const url = new URL(guideline.file_path);
+            const pathParts = url.pathname.split('/');
+            const bucketIndex = pathParts.findIndex((part) => part === 'guidelines');
+            if (bucketIndex !== -1 && bucketIndex < pathParts.length - 1) {
+              oldFilePath = pathParts.slice(bucketIndex + 1).join('/');
+            }
+          } catch {
+            // If not a valid URL, assume it's already a path
+          }
+          await deleteFile('guidelines', oldFilePath);
+        } catch (deleteErr) {
+          console.warn('Could not delete old file:', deleteErr);
+        }
+
+        // Get signed URL for the new file
+        const signedUrl = await getSignedUrl('guidelines', path);
+        newFilePath = signedUrl || path;
+      }
+
+      const { error } = await supabase
+        .from('guidelines')
+        .update({
+          title: updates.title,
+          category: updates.category || 'General',
+          tags: updates.tags,
+          notes: updates.notes,
+          source_url: updates.source_url,
+          ...(newFile && { 
+            file_path: newFilePath.includes('://') ? newFilePath.split('/').pop() : newFilePath,
+            file_type: newFileType 
+          })
+        })
+        .eq('id', guideline.id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error updating guideline:', error);
+        throw new Error('Failed to update guideline');
+      }
+
+      const updatedGuideline = {
+        ...guideline,
+        ...updates,
+        category: updates.category || guideline.category,
+        ...(newFile && { file_path: newFilePath, file_type: newFileType })
+      };
+
+      setGuidelines((prev) =>
+        prev.map((g) => g.id === guideline.id ? updatedGuideline : g)
+      );
+
+      // Update active guideline if it's the one being edited
+      if (active?.id === guideline.id) {
+        setActive(updatedGuideline);
+      }
+    } catch (error) {
+      console.error('Error updating guideline:', error);
+      throw error;
+    }
+  };
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/');
@@ -323,99 +458,127 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-slate-900 px-8 py-8">
       <header className="mx-auto flex max-w-6xl items-center justify-between rounded-2xl bg-slate-800 border border-slate-700 px-6 py-4 shadow-sm glass-panel">
-        {/* Left side - Logo and Upload */}
+        {/* Left side - Logo, Account Info, and Usage */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <img src="/logo.svg" alt="MedSnap" className="h-6 w-6" />
             <span className="text-sm font-semibold text-brand-500">MedSnap</span>
           </div>
           <div className="h-6 w-px bg-slate-600" />
-          <button
-            onClick={() => {
-              const uploadCount = profile?.upload_count ?? guidelines.length;
-              const subscriptionStatus = profile?.subscription_status;
-              const isFree = !subscriptionStatus || subscriptionStatus === 'inactive';
-              const uploadLimit = isFree ? FREE_UPLOAD_LIMIT : Infinity;
-
-              if (uploadCount >= uploadLimit) {
-                setPricingOpen(true);
-              } else {
-                setUploadOpen(true);
-              }
-            }}
-            className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
-          >
-            <PlusIcon className="h-4 w-4" />
-            Upload
-          </button>
-        </div>
-        
-        {/* Right side - Usage, Account, and Sign Out */}
-        <div className="flex items-center gap-4">
-          {/* Usage Indicator */}
-          {profile && (
-            <div className="flex items-center gap-2 rounded-lg bg-slate-700/50 px-3 py-1.5">
-              <span className="text-xs font-medium text-slate-300">
-                {profile.subscription_status === 'active' ? (
-                  <span className="text-brand-400">Pro Plan</span>
-                ) : (
-                  <>
-                    <span className="text-slate-400">Free:</span>{' '}
-                    <span className={profile.upload_count >= FREE_UPLOAD_LIMIT ? 'text-red-400' : 'text-brand-400'}>
-                      {Math.max(0, FREE_UPLOAD_LIMIT - profile.upload_count)} remaining
-                    </span>
-                  </>
-                )}
-              </span>
-            </div>
-          )}
           
-          {/* Account Dropdown */}
-          <div className="flex items-center gap-3 border-l border-slate-600 pl-4">
-            <div className="text-right">
+          {/* Account Info */}
+          <div className="flex items-center gap-3">
+            <div className="text-left">
               <p className="text-xs font-medium text-slate-300">{user.email}</p>
               <p className="text-xs text-slate-500">
                 {profile?.subscription_status === 'active' ? 'Pro Account' : 'Free Account'}
               </p>
             </div>
-            {profile && profile.subscription_status !== 'active' && (
-              <button
-                onClick={() => setPricingOpen(true)}
-                className="rounded-lg bg-brand-600/20 border border-brand-600/50 px-3 py-1.5 text-xs font-semibold text-brand-400 transition hover:bg-brand-600/30"
-              >
-                Upgrade
-              </button>
-            )}
-            <button
-              onClick={handleSignOut}
-              className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-400 hover:bg-slate-700 hover:text-slate-300"
-            >
-              Sign Out
-            </button>
           </div>
+          
+          <div className="h-6 w-px bg-slate-600" />
+          
+          {/* Usage Indicator - now uses guidelines.length for accuracy */}
+          <div className="flex items-center gap-2 rounded-lg bg-slate-700/50 px-3 py-1.5">
+            <span className="text-xs font-medium text-slate-300">
+              {profile?.subscription_status === 'active' ? (
+                <span className="text-brand-400">Pro Plan</span>
+              ) : (
+                <>
+                  <span className="text-slate-400">Free:</span>{' '}
+                  <span className={guidelines.length >= FREE_UPLOAD_LIMIT ? 'text-red-400' : 'text-brand-400'}>
+                    {Math.max(0, FREE_UPLOAD_LIMIT - guidelines.length)} remaining
+                  </span>
+                </>
+              )}
+            </span>
+          </div>
+        </div>
+        
+        {/* Right side - Upgrade and Upload Button */}
+        <div className="flex items-center gap-3">
+          {profile && profile.subscription_status !== 'active' && (
+            <button
+              onClick={() => setPricingOpen(true)}
+              className="rounded-lg bg-brand-600/20 border border-brand-600/50 px-3 py-1.5 text-xs font-semibold text-brand-400 transition hover:bg-brand-600/30"
+            >
+              Upgrade
+            </button>
+          )}
+          <button
+            onClick={handleSignOut}
+            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-400 hover:bg-slate-700 hover:text-slate-300"
+          >
+            Sign Out
+          </button>
+          <div className="h-6 w-px bg-slate-600" />
+          <button
+            onClick={() => {
+              const subscriptionStatus = profile?.subscription_status;
+              const isFree = !subscriptionStatus || subscriptionStatus === 'inactive';
+              const uploadLimit = isFree ? FREE_UPLOAD_LIMIT : Infinity;
+
+              if (guidelines.length >= uploadLimit) {
+                setPricingOpen(true);
+              } else {
+                setUploadOpen(true);
+              }
+            }}
+            className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-all duration-200 hover:bg-emerald-500 hover:scale-105 hover:shadow-emerald-500/30 active:scale-95"
+          >
+            <PlusIcon className="h-5 w-5" />
+            Upload
+          </button>
         </div>
       </header>
 
       <main className="mx-auto mt-6 flex max-w-6xl gap-6">
         <div className="w-64 space-y-4">
-          <Sidebar categories={categories} selected={category} onSelect={setCategory} />
+          <Sidebar 
+            categories={categories} 
+            selected={category} 
+            onSelect={setCategory}
+            guidelines={guidelines}
+            onUpdateGuidelineCategory={handleUpdateGuidelineCategory}
+          />
         </div>
         <div className="flex-1 space-y-4">
           <div className="flex items-center gap-4 rounded-2xl bg-slate-800 border border-slate-700 px-4 py-3 shadow-sm glass-panel">
             <div className="flex-1">
               <SearchBar value={search} onChange={setSearch} />
             </div>
+            
+            {/* Sort Dropdown */}
+            <div className="flex items-center gap-2">
+              <ArrowsUpDownIcon className="h-4 w-4 text-slate-400" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-200 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              >
+                <option value="date-desc">Newest First</option>
+                <option value="date-asc">Oldest First</option>
+                <option value="alpha-asc">A → Z</option>
+                <option value="alpha-desc">Z → A</option>
+              </select>
+            </div>
+            
             <button
               onClick={() => {
                 // Search is already handled by the filtered useMemo, this button is just for UX
                 // The search happens automatically as the user types, but this provides a visual action
-                document.querySelector('input[type="search"]')?.focus();
+                (document.querySelector('input[type="search"]') as HTMLInputElement | null)?.focus();
               }}
               className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
             >
               Search
             </button>
           </div>
+
+          {/* Limit Reached Banner */}
+          {profile?.subscription_status !== 'active' && guidelines.length >= FREE_UPLOAD_LIMIT && (
+            <LimitReachedBanner onUpgrade={() => setPricingOpen(true)} />
+          )}
 
           {loading ? (
             <div className="col-span-full rounded-xl border border-dashed border-slate-700 bg-slate-800/60 p-6 text-center text-slate-400">
@@ -447,7 +610,14 @@ export default function Dashboard() {
         onSubmit={handleUpload}
         existingCategories={categories}
       />
-      <ViewerModal open={viewerOpen} guideline={active} onClose={() => setViewerOpen(false)} />
+      <ViewerModal 
+        open={viewerOpen} 
+        guideline={active} 
+        onClose={() => setViewerOpen(false)}
+        onUpdate={handleUpdateGuideline}
+        onDelete={handleDelete}
+        existingCategories={categories}
+      />
       {user && (
         <PricingModal
           open={pricingOpen}

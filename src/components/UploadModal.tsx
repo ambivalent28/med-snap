@@ -1,5 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { XMarkIcon, ArrowUpTrayIcon, DocumentIcon, PlusIcon, XCircleIcon } from '@heroicons/react/24/solid';
+import { XMarkIcon, ArrowUpTrayIcon, DocumentIcon, PlusIcon, ChevronDownIcon, ExclamationTriangleIcon } from '@heroicons/react/24/solid';
 import React, { Fragment, useCallback, useMemo, useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import type { UploadFormValues } from '../types';
@@ -34,20 +34,27 @@ const UploadModal: React.FC<Props> = ({ open, onClose, onSubmit, existingCategor
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [tagInput, setTagInput] = useState('');
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [localCategories, setLocalCategories] = useState<string[]>([]);
+  const [showNotes, setShowNotes] = useState(false);
+  const [showSourceUrl, setShowSourceUrl] = useState(false);
 
-  // Reset form when modal closes
+  const allCategories = useMemo(() => {
+    return [...existingCategories, ...localCategories.filter(c => !existingCategories.includes(c))];
+  }, [existingCategories, localCategories]);
+
   useEffect(() => {
     if (!open) {
       setForm(defaultForm);
       setFile(null);
       setPreview(null);
-      setTagInput('');
       setError(null);
       setIsCreatingCategory(false);
       setNewCategoryName('');
+      setLocalCategories([]);
+      setShowNotes(false);
+      setShowSourceUrl(false);
     }
   }, [open]);
 
@@ -56,19 +63,15 @@ const UploadModal: React.FC<Props> = ({ open, onClose, onSubmit, existingCategor
     if (picked && allowedTypes.includes(picked.type)) {
       setFile(picked);
       setError(null);
-      
-      // Create preview for images
       if (picked.type.startsWith('image/')) {
         const reader = new FileReader();
-        reader.onload = (e) => {
-          setPreview(e.target?.result as string);
-        };
+        reader.onload = (e) => setPreview(e.target?.result as string);
         reader.readAsDataURL(picked);
       } else {
         setPreview(null);
       }
     } else {
-      setError('Only PDF, Word documents (DOC/DOCX), PNG, and JPG files are allowed.');
+      setError('Only PDF, Word documents, PNG, and JPG files are allowed.');
     }
   }, []);
 
@@ -85,15 +88,16 @@ const UploadModal: React.FC<Props> = ({ open, onClose, onSubmit, existingCategor
   });
 
   const isValid = useMemo(() => {
-    return (
-      !!file &&
-      form.title.trim().length > 0 &&
-      form.confirmNoPhi === true
-    );
+    return !!file && form.title.trim().length > 0 && form.confirmNoPhi === true;
   }, [file, form.title, form.confirmNoPhi]);
 
   const handleSubmit = async () => {
-    if (!file || !isValid) return;
+    if (!file || !isValid) {
+      if (!form.confirmNoPhi) {
+        setError('Please confirm that this file contains no patient information.');
+      }
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -101,46 +105,28 @@ const UploadModal: React.FC<Props> = ({ open, onClose, onSubmit, existingCategor
       onClose();
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : 'Upload failed. Please retry.');
+      setError(err instanceof Error ? err.message : 'Upload failed. Please try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const addTag = () => {
-    const trimmed = tagInput.trim();
-    if (trimmed && !form.tags.includes(trimmed)) {
-      setForm(prev => ({ ...prev, tags: [...prev.tags, trimmed] }));
-      setTagInput('');
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setForm(prev => ({ ...prev, tags: prev.tags.filter(t => t !== tagToRemove) }));
-  };
-
-  const handleCategoryChange = (value: string) => {
-    if (value === '__create_new__') {
-      setIsCreatingCategory(true);
-      setNewCategoryName('');
-    } else {
-      setForm(prev => ({ ...prev, category: value }));
-      setIsCreatingCategory(false);
-    }
-  };
-
   const confirmNewCategory = () => {
-    if (newCategoryName.trim()) {
-      setForm(prev => ({ ...prev, category: newCategoryName.trim() }));
-      setIsCreatingCategory(false);
-      setNewCategoryName('');
+    const trimmed = newCategoryName.trim();
+    if (trimmed && !existingCategories.includes(trimmed) && !localCategories.includes(trimmed)) {
+      setLocalCategories(prev => [...prev, trimmed]);
+      setForm(prev => ({ ...prev, category: trimmed }));
+    } else if (trimmed) {
+      setForm(prev => ({ ...prev, category: trimmed }));
     }
+    setIsCreatingCategory(false);
+    setNewCategoryName('');
   };
 
   const getFileTypeLabel = () => {
     if (!file) return '';
-    if (file.type === 'application/pdf') return 'PDF Document';
-    if (file.type.includes('word') || file.type.includes('msword')) return 'Word Document';
+    if (file.type === 'application/pdf') return 'PDF';
+    if (file.type.includes('word') || file.type.includes('msword')) return 'Word';
     if (file.type.startsWith('image/')) return 'Image';
     return 'Document';
   };
@@ -148,231 +134,176 @@ const UploadModal: React.FC<Props> = ({ open, onClose, onSubmit, existingCategor
   return (
     <Transition show={open} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-200"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-150"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
+        <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
           <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-200"
-              enterFrom="opacity-0 translate-y-2"
-              enterTo="opacity-100 translate-y-0"
-              leave="ease-in duration-150"
-              leaveFrom="opacity-100 translate-y-0"
-              leaveTo="opacity-0 translate-y-2"
-            >
-              <Dialog.Panel className="w-full max-w-2xl space-y-4 rounded-2xl bg-slate-800 border border-slate-700 p-6 shadow-xl">
+            <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 translate-y-2" enterTo="opacity-100 translate-y-0" leave="ease-in duration-150" leaveFrom="opacity-100 translate-y-0" leaveTo="opacity-0 translate-y-2">
+              <Dialog.Panel className="w-full max-w-lg space-y-4 rounded-2xl bg-slate-800 border border-slate-700 p-5 shadow-xl">
                 <div className="flex items-center justify-between">
-                  <Dialog.Title className="text-lg font-semibold text-slate-100">
-                    Upload Clinical Reference
+                  <Dialog.Title className="text-base font-semibold text-slate-100">
+                    Upload Reference
                   </Dialog.Title>
-                  <button
-                    onClick={onClose}
-                    className="rounded-full p-1 text-slate-400 hover:text-slate-200 hover:bg-slate-700"
-                  >
+                  <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-slate-700">
                     <XMarkIcon className="h-5 w-5" />
                   </button>
                 </div>
 
+                {/* Drop Zone */}
                 <div
                   {...getRootProps()}
-                  className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-6 text-center transition ${
-                    isDragActive
-                      ? 'border-brand-500 bg-brand-950/20'
-                      : 'border-slate-600 hover:border-brand-600 hover:bg-slate-700/50'
+                  className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-5 text-center transition ${
+                    isDragActive ? 'border-brand-500 bg-brand-950/20' : 'border-slate-600 hover:border-slate-500'
                   }`}
                 >
                   <input {...getInputProps()} />
-                  <ArrowUpTrayIcon className="mb-3 h-8 w-8 text-brand-500" />
-                  <p className="text-sm font-medium text-slate-200">
-                    Drag & drop a file, or click to browse
-                  </p>
-                  <p className="mt-1 text-xs text-slate-400">
-                    Accepted: PDF, Word (DOC/DOCX), PNG, JPG
-                  </p>
+                  <ArrowUpTrayIcon className="mb-2 h-7 w-7 text-brand-500" />
+                  <p className="text-sm text-slate-300">Drop file here or click to browse</p>
+                  <p className="mt-1 text-xs text-slate-500">PDF, Word, PNG, JPG</p>
                   {file && (
-                    <div className="mt-2">
-                      <p className="max-w-md truncate rounded-full bg-slate-700 px-3 py-1 text-xs font-semibold text-slate-200">
-                        {file.name}
-                      </p>
+                    <div className="mt-3">
+                      <span className="inline-flex items-center gap-2 rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200">
+                        <DocumentIcon className="h-4 w-4 text-brand-400" />
+                        {file.name} ({getFileTypeLabel()})
+                      </span>
                       {preview && (
-                        <div className="mt-3 flex justify-center">
-                          <img
-                            src={preview}
-                            alt="Preview"
-                            className="max-h-32 max-w-full rounded-lg border border-slate-600"
-                          />
-                        </div>
-                      )}
-                      {(file.type === 'application/pdf' || file.type.includes('word') || file.type.includes('msword')) && (
-                        <div className="mt-3 flex justify-center">
-                          <div className="flex items-center gap-2 rounded-lg bg-slate-700 px-4 py-2">
-                            <DocumentIcon className="h-6 w-6 text-brand-500" />
-                            <span className="text-sm font-medium text-slate-200">{getFileTypeLabel()}</span>
-                          </div>
-                        </div>
+                        <img src={preview} alt="Preview" className="mt-3 max-h-24 rounded-lg border border-slate-600 mx-auto" />
                       )}
                     </div>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Title *</label>
-                    <input
-                      type="text"
-                      className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-100 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                      value={form.title}
-                      onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
-                      placeholder="e.g., 2024 Sepsis Guidelines"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Category</label>
-                    {!isCreatingCategory ? (
-                      <select
-                        className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                        value={form.category}
-                        onChange={(e) => handleCategoryChange(e.target.value)}
-                      >
-                        {existingCategories.map(cat => (
-                          <option key={cat} value={cat} className="bg-slate-700">{cat}</option>
-                        ))}
-                        <option value="__create_new__" className="bg-slate-700">+ Create New Category</option>
-                      </select>
-                    ) : (
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          className="flex-1 rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-100 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                          value={newCategoryName}
-                          onChange={(e) => setNewCategoryName(e.target.value)}
-                          placeholder="Category name"
-                          autoFocus
-                        />
-                        <button
-                          onClick={confirmNewCategory}
-                          className="rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700"
-                        >
-                          Add
-                        </button>
-                        <button
-                          onClick={() => {
-                            setIsCreatingCategory(false);
-                            setNewCategoryName('');
-                          }}
-                          className="rounded-lg border border-slate-600 px-3 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  <div className="col-span-2 space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Tags</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        className="flex-1 rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-100 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                        value={tagInput}
-                        onChange={(e) => setTagInput(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            addTag();
-                          }
-                        }}
-                        placeholder="Add a tag"
-                      />
-                      <button
-                        onClick={addTag}
-                        className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 flex items-center gap-1"
-                      >
-                        <PlusIcon className="h-4 w-4" />
-                        Add
-                      </button>
-                    </div>
-                    {form.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {form.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="inline-flex items-center gap-1 rounded-full bg-brand-900/50 border border-brand-700 px-3 py-1 text-xs font-medium text-brand-200"
-                          >
-                            {tag}
-                            <button
-                              onClick={() => removeTag(tag)}
-                              className="hover:text-brand-100"
-                            >
-                              <XCircleIcon className="h-3 w-3" />
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Source URL</label>
-                    <input
-                      type="url"
-                      className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-100 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                      value={form.source_url}
-                      onChange={(e) => setForm(prev => ({ ...prev, source_url: e.target.value }))}
-                      placeholder="https://..."
-                    />
-                  </div>
-                  <div className="col-span-2 space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Notes</label>
-                    <textarea
-                      className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-100 placeholder-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-                      rows={2}
-                      value={form.notes}
-                      onChange={(e) => setForm(prev => ({ ...prev, notes: e.target.value }))}
-                      placeholder="Clinical notes or reminders"
-                    />
-                  </div>
+                {/* Title */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Title</label>
+                  <input
+                    type="text"
+                    className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-brand-500 focus:outline-none"
+                    value={form.title}
+                    onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="e.g., Sepsis Management Protocol"
+                  />
                 </div>
 
-                <label className="flex items-start gap-2 rounded-lg bg-slate-700/50 px-3 py-3 text-sm text-slate-300">
-                  <input
-                    type="checkbox"
-                    className="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-700 text-brand-600 focus:ring-brand-500"
-                    checked={form.confirmNoPhi}
-                    onChange={(e) => setForm(prev => ({ ...prev, confirmNoPhi: e.target.checked }))}
-                  />
-                  <span>
-                    I confirm this file contains no patient information or protected health data.
-                  </span>
-                </label>
+                {/* Category */}
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5">Category</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {allCategories.map(cat => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => { setForm(prev => ({ ...prev, category: cat })); setIsCreatingCategory(false); }}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+                          form.category === cat
+                            ? 'bg-brand-600 text-white'
+                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setIsCreatingCategory(true)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-700 text-slate-400 hover:bg-slate-600 flex items-center gap-1"
+                    >
+                      <PlusIcon className="h-3 w-3" /> New
+                    </button>
+                  </div>
+                  {isCreatingCategory && (
+                    <div className="flex gap-2 mt-2">
+                      <input
+                        type="text"
+                        className="flex-1 rounded-lg border border-slate-600 bg-slate-700 px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:border-brand-500 focus:outline-none"
+                        value={newCategoryName}
+                        onChange={(e) => setNewCategoryName(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && confirmNewCategory()}
+                        placeholder="Category name..."
+                        autoFocus
+                      />
+                      <button onClick={confirmNewCategory} disabled={!newCategoryName.trim()} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-brand-600 text-white hover:bg-brand-500 disabled:opacity-50">Add</button>
+                      <button onClick={() => { setIsCreatingCategory(false); setNewCategoryName(''); }} className="px-2 py-1.5 rounded-lg text-xs text-slate-400 hover:bg-slate-700">Cancel</button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Optional Fields - Hidden by default */}
+                <div className="space-y-2">
+                  {/* Notes toggle */}
+                  {!showNotes ? (
+                    <button onClick={() => setShowNotes(true)} className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-400">
+                      <ChevronDownIcon className="h-3 w-3" />
+                      Add note (optional)
+                    </button>
+                  ) : (
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 mb-1">Note</label>
+                      <textarea
+                        className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-brand-500 focus:outline-none resize-none"
+                        rows={2}
+                        value={form.notes}
+                        onChange={(e) => setForm(prev => ({ ...prev, notes: e.target.value }))}
+                        placeholder="Personal notes..."
+                      />
+                    </div>
+                  )}
+
+                  {/* Source URL toggle */}
+                  {!showSourceUrl ? (
+                    <button onClick={() => setShowSourceUrl(true)} className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-400">
+                      <ChevronDownIcon className="h-3 w-3" />
+                      Add reference URL (optional)
+                    </button>
+                  ) : (
+                    <div>
+                      <label className="block text-xs font-medium text-slate-500 mb-1">Reference URL</label>
+                      <input
+                        type="url"
+                        className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-brand-500 focus:outline-none"
+                        value={form.source_url}
+                        onChange={(e) => setForm(prev => ({ ...prev, source_url: e.target.value }))}
+                        placeholder="https://..."
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Confirmation - Made more prominent */}
+                <div className={`rounded-lg border-2 p-3 transition ${form.confirmNoPhi ? 'border-brand-600/50 bg-brand-900/20' : 'border-amber-600/50 bg-amber-900/20'}`}>
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="mt-0.5 h-5 w-5 rounded border-slate-600 bg-slate-700 text-brand-600 focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 focus:ring-offset-slate-800"
+                      checked={form.confirmNoPhi}
+                      onChange={(e) => setForm(prev => ({ ...prev, confirmNoPhi: e.target.checked }))}
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <ExclamationTriangleIcon className={`h-4 w-4 ${form.confirmNoPhi ? 'text-brand-400' : 'text-amber-400'}`} />
+                        <span className={`text-sm font-semibold ${form.confirmNoPhi ? 'text-brand-300' : 'text-amber-300'}`}>
+                          Required: Confirm no patient information
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400">
+                        This file must not contain any patient information or protected health data.
+                      </p>
+                    </div>
+                  </label>
+                </div>
 
                 {error && (
-                  <div className="rounded-lg bg-red-900/50 border border-red-700 px-3 py-2 text-sm text-red-200">
-                    {error}
-                  </div>
+                  <div className="rounded-lg bg-red-900/40 border border-red-800 px-3 py-2 text-xs text-red-300">{error}</div>
                 )}
 
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={onClose}
-                    className="rounded-lg px-3 py-2 text-sm font-semibold text-slate-300 hover:bg-slate-700"
-                  >
-                    Cancel
-                  </button>
+                <div className="flex justify-end gap-2 pt-2">
+                  <button onClick={onClose} className="px-3 py-2 text-sm text-slate-400 hover:text-slate-300">Cancel</button>
                   <button
                     onClick={handleSubmit}
                     disabled={!isValid || submitting}
-                    className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-600 disabled:text-slate-400"
+                    className="px-4 py-2 rounded-lg text-sm font-medium bg-brand-600 text-white hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {submitting ? 'Uploading...' : 'Upload'}
                   </button>

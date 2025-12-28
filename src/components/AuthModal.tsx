@@ -23,6 +23,13 @@ const AuthModal: React.FC<Props> = ({ open, onClose, defaultMode = 'signin' }) =
   const { signUp, signIn, resetPassword } = useAuth();
   const navigate = useNavigate();
 
+  // Sync mode with defaultMode when modal opens
+  React.useEffect(() => {
+    if (open) {
+      setMode(defaultMode);
+    }
+  }, [open, defaultMode]);
+
   const resetForm = () => {
     setEmail('');
     setPassword('');
@@ -275,7 +282,7 @@ const AuthModal: React.FC<Props> = ({ open, onClose, defaultMode = 'signin' }) =
                       {loading ? 'Creating account...' : 'Create Account'}
                     </button>
                     <p className="text-center text-xs text-slate-400">
-                      Start with 5 free uploads • No credit card required
+                      10 free uploads • No credit card required
                     </p>
                   </form>
                 )}

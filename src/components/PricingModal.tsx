@@ -1,6 +1,7 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { loadStripe } from '@stripe/stripe-js';
+import type { Stripe } from '@stripe/stripe-js';
 import React, { Fragment, useState } from 'react';
 
 interface Props {
@@ -14,58 +15,57 @@ type Plan = 'monthly' | 'yearly';
 const PricingModal: React.FC<Props> = ({ open, onClose, userId }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<Plan>('monthly');
+  const [selectedPlan, setSelectedPlan] = useState<Plan>('yearly');
 
   const handleCheckout = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // In a real implementation, this would call your backend API
-      // to create a Stripe Checkout session
-      // For now, we'll show a placeholder message
-      
       const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
       if (!stripePublishableKey) {
-        throw new Error('Stripe is not configured. Please add VITE_STRIPE_PUBLISHABLE_KEY to your .env file.');
+        throw new Error('Stripe is not configured. Please contact support.');
       }
 
-      // This is a placeholder - you'll need to implement the backend endpoint
-      // that creates the Stripe Checkout session
-      const response = await fetch('/api/create-checkout-session', {
+      const priceId = selectedPlan === 'monthly' 
+        ? import.meta.env.VITE_STRIPE_PRICE_ID_MONTHLY 
+        : import.meta.env.VITE_STRIPE_PRICE_ID_YEARLY;
+
+      if (!priceId) {
+        throw new Error('Price configuration is missing. Please contact support.');
+      }
+
+      // Use Vercel serverless function or API endpoint
+      const apiUrl = import.meta.env.VITE_API_URL || '/api';
+      const response = await fetch(`${apiUrl}/create-checkout-session`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          priceId: selectedPlan === 'monthly' 
-            ? import.meta.env.VITE_STRIPE_PRICE_ID_MONTHLY 
-            : import.meta.env.VITE_STRIPE_PRICE_ID_YEARLY,
-          userId,
-        }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priceId, userId }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create checkout session. Please try again.');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || 'Failed to create checkout session.';
+        throw new Error(errorMessage);
       }
 
       const { sessionId } = await response.json();
       const stripe = await loadStripe(stripePublishableKey);
       
       if (!stripe) {
-        throw new Error('Failed to load Stripe');
+        throw new Error('Failed to load payment processor.');
       }
 
-      const { error: redirectError } = await stripe.redirectToCheckout({
-        sessionId,
-      });
+      const result = await (stripe as Stripe & { 
+        redirectToCheckout: (opts: { sessionId: string }) => Promise<{ error?: { message: string } }> 
+      }).redirectToCheckout({ sessionId });
 
-      if (redirectError) {
-        throw redirectError;
+      if (result.error) {
+        throw new Error(result.error.message);
       }
     } catch (err) {
       console.error('Checkout error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
+      setError(err instanceof Error ? err.message : 'An error occurred.');
       setLoading(false);
     }
   };
@@ -73,124 +73,80 @@ const PricingModal: React.FC<Props> = ({ open, onClose, userId }) => {
   return (
     <Transition show={open} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <Transition.Child
-          as={Fragment}
-          enter="ease-out duration-200"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="ease-in duration-150"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm" />
+        <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
         </Transition.Child>
 
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-200"
-              enterFrom="opacity-0 translate-y-2"
-              enterTo="opacity-100 translate-y-0"
-              leave="ease-in duration-150"
-              leaveFrom="opacity-100 translate-y-0"
-              leaveTo="opacity-0 translate-y-2"
-            >
-              <Dialog.Panel className="w-full max-w-2xl space-y-6 rounded-2xl bg-white p-8 shadow-xl ring-1 ring-slate-100">
+            <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 translate-y-2" enterTo="opacity-100 translate-y-0" leave="ease-in duration-150" leaveFrom="opacity-100 translate-y-0" leaveTo="opacity-0 translate-y-2">
+              <Dialog.Panel className="w-full max-w-lg space-y-5 rounded-2xl bg-slate-800 border border-slate-700 p-6 shadow-xl">
                 <div className="flex items-center justify-between">
-                  <Dialog.Title className="text-2xl font-bold text-slate-900">
-                    Upgrade to Pro
-                  </Dialog.Title>
-                  <button
-                    onClick={onClose}
-                    className="rounded-full p-1 text-slate-500 hover:bg-slate-100"
-                  >
+                  <Dialog.Title className="text-xl font-bold text-white">Upgrade to Pro</Dialog.Title>
+                  <button onClick={onClose} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700">
                     <XMarkIcon className="h-5 w-5" />
                   </button>
                 </div>
 
                 {error && (
-                  <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
-                    {error}
-                  </div>
+                  <div className="rounded-lg bg-red-900/30 border border-red-700/50 px-4 py-3 text-sm text-red-300">{error}</div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => setSelectedPlan('monthly')}
-                    className={`rounded-xl border-2 p-6 text-left transition ${
-                      selectedPlan === 'monthly'
-                        ? 'border-brand-500 bg-brand-50'
-                        : 'border-slate-200 hover:border-slate-300'
+                    className={`rounded-xl border-2 p-4 text-left transition ${
+                      selectedPlan === 'monthly' ? 'border-brand-500 bg-brand-900/30' : 'border-slate-600 hover:border-slate-500 bg-slate-700/30'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-slate-900">Monthly</h3>
-                      {selectedPlan === 'monthly' && (
-                        <CheckIcon className="h-6 w-6 text-brand-600" />
-                      )}
+                      <h3 className="text-base font-semibold text-white">Monthly</h3>
+                      {selectedPlan === 'monthly' && <CheckIcon className="h-5 w-5 text-brand-400" />}
                     </div>
                     <div className="mt-2">
-                      <span className="text-3xl font-bold text-slate-900">$5</span>
-                      <span className="text-slate-600">/month</span>
+                      <span className="text-sm text-slate-400">$</span>
+                      <span className="text-2xl font-bold text-white">5</span>
+                      <span className="text-slate-400">/mo</span>
                     </div>
-                    <p className="mt-2 text-sm text-slate-600">Billed monthly</p>
                   </button>
 
                   <button
                     onClick={() => setSelectedPlan('yearly')}
-                    className={`rounded-xl border-2 p-6 text-left transition ${
-                      selectedPlan === 'yearly'
-                        ? 'border-brand-500 bg-brand-50'
-                        : 'border-slate-200 hover:border-slate-300'
+                    className={`rounded-xl border-2 p-4 text-left transition relative ${
+                      selectedPlan === 'yearly' ? 'border-brand-500 bg-brand-900/30' : 'border-slate-600 hover:border-slate-500 bg-slate-700/30'
                     }`}
                   >
+                    <span className="absolute -top-2.5 left-3 rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-semibold text-white">SAVE 58%</span>
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-slate-900">Yearly</h3>
-                      {selectedPlan === 'yearly' && (
-                        <CheckIcon className="h-6 w-6 text-brand-600" />
-                      )}
+                      <h3 className="text-base font-semibold text-white">Yearly</h3>
+                      {selectedPlan === 'yearly' && <CheckIcon className="h-5 w-5 text-brand-400" />}
                     </div>
                     <div className="mt-2">
-                      <span className="text-3xl font-bold text-slate-900">$20</span>
-                      <span className="text-slate-600">/year</span>
+                      <span className="text-sm text-slate-400">$</span>
+                      <span className="text-2xl font-bold text-white">25</span>
+                      <span className="text-slate-400">/yr</span>
                     </div>
-                    <p className="mt-2 text-sm text-slate-600">Save $40 per year</p>
-                    <span className="mt-1 inline-block rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
-                      Best Value
-                    </span>
                   </button>
                 </div>
 
-                <div className="rounded-lg bg-slate-50 p-4">
-                  <h4 className="font-semibold text-slate-900">What's included:</h4>
-                  <ul className="mt-2 space-y-2 text-sm text-slate-600">
+                <div className="rounded-xl bg-slate-700/30 border border-slate-600 p-4">
+                  <h4 className="font-medium text-white text-sm mb-2">What's included:</h4>
+                  <ul className="space-y-1.5 text-sm text-slate-300">
                     <li className="flex items-center gap-2">
-                      <CheckIcon className="h-4 w-4 text-brand-600" />
+                      <CheckIcon className="h-4 w-4 text-brand-400 flex-shrink-0" />
                       <span>Unlimited uploads</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckIcon className="h-4 w-4 text-brand-600" />
-                      <span>All existing features</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckIcon className="h-4 w-4 text-brand-600" />
-                      <span>Priority support</span>
                     </li>
                   </ul>
                 </div>
 
                 <div className="flex gap-3">
-                  <button
-                    onClick={onClose}
-                    className="flex-1 rounded-lg border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                  >
+                  <button onClick={onClose} className="flex-1 rounded-lg border border-slate-600 px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-700 transition">
                     Cancel
                   </button>
                   <button
                     onClick={handleCheckout}
                     disabled={loading}
-                    className="flex-1 rounded-lg bg-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                    className="flex-1 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
                   >
                     {loading ? 'Processing...' : 'Continue to Checkout'}
                   </button>
@@ -205,4 +161,3 @@ const PricingModal: React.FC<Props> = ({ open, onClose, userId }) => {
 };
 
 export default PricingModal;
-

@@ -1,9 +1,10 @@
-import { PlusIcon, ArrowsUpDownIcon } from '@heroicons/react/24/solid';
+import { PlusIcon, ArrowsUpDownIcon, UserCircleIcon } from '@heroicons/react/24/solid';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GuidelineCard from '../components/GuidelineCard';
 import LimitReachedBanner from '../components/LimitReachedBanner';
 import PricingModal from '../components/PricingModal';
+import ProfileModal from '../components/ProfileModal';
 import SearchBar from '../components/SearchBar';
 import Sidebar from '../components/Sidebar';
 import UploadModal from '../components/UploadModal';
@@ -25,6 +26,7 @@ export default function Dashboard() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [pricingOpen, setPricingOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [active, setActive] = useState<Guideline | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<{
@@ -506,6 +508,13 @@ export default function Dashboard() {
             </button>
           )}
           <button
+            onClick={() => setProfileOpen(true)}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-400 hover:bg-slate-700 hover:text-slate-300"
+          >
+            <UserCircleIcon className="h-4 w-4" />
+            Account
+          </button>
+          <button
             onClick={handleSignOut}
             className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-400 hover:bg-slate-700 hover:text-slate-300"
           >
@@ -623,6 +632,15 @@ export default function Dashboard() {
           open={pricingOpen}
           onClose={() => setPricingOpen(false)}
           userId={user.id}
+        />
+      )}
+      {user && (
+        <ProfileModal
+          open={profileOpen}
+          onClose={() => setProfileOpen(false)}
+          user={{ email: user.email || '', id: user.id }}
+          profile={profile}
+          onSubscriptionCancelled={() => loadProfile()}
         />
       )}
     </div>

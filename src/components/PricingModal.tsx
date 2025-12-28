@@ -24,7 +24,7 @@ const PricingModal: React.FC<Props> = ({ open, onClose, userId }) => {
     try {
       const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
       if (!stripePublishableKey) {
-        throw new Error('Stripe is not configured. Please contact support.');
+        throw new Error('Stripe publishable key is not configured. Add VITE_STRIPE_PUBLISHABLE_KEY to Vercel.');
       }
 
       const priceId = selectedPlan === 'monthly' 
@@ -32,20 +32,30 @@ const PricingModal: React.FC<Props> = ({ open, onClose, userId }) => {
         : import.meta.env.VITE_STRIPE_PRICE_ID_YEARLY;
 
       if (!priceId) {
-        throw new Error('Price configuration is missing. Please contact support.');
+        throw new Error(`Price ID for ${selectedPlan} plan is missing. Add VITE_STRIPE_PRICE_ID_${selectedPlan.toUpperCase()} to Vercel.`);
       }
 
+      console.log('Checkout request:', { priceId, userId, selectedPlan });
+
       // Use Vercel serverless function or API endpoint
-      const apiUrl = import.meta.env.VITE_API_URL || '/api';
-      const response = await fetch(`${apiUrl}/create-checkout-session`, {
+      const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ priceId, userId }),
       });
 
+      console.log('Response status:', response.status);
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || 'Failed to create checkout session.';
+        const errorText = await response.text();
+        console.error('API error response:', errorText);
+        let errorMessage = 'Failed to create checkout session.';
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          errorMessage = `Server error (${response.status}): ${errorText.substring(0, 100)}`;
+        }
         throw new Error(errorMessage);
       }
 

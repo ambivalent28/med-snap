@@ -31,7 +31,7 @@ export default async function handler(
     const Stripe = (await import('stripe')).default;
     
     const stripe = new Stripe(stripeSecretKey, {
-      apiVersion: '2023-10-16', // Use stable API version
+      apiVersion: '2023-10-16',
     });
 
     const { priceId, userId } = req.body || {};
@@ -68,7 +68,12 @@ export default async function handler(
     });
 
     console.log('Checkout session created:', session.id);
-    return res.status(200).json({ sessionId: session.id });
+    
+    // Return the URL for direct redirect (new Stripe.js approach)
+    return res.status(200).json({ 
+      sessionId: session.id,
+      url: session.url 
+    });
   } catch (error: unknown) {
     console.error('Checkout session error:', error);
     

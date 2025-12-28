@@ -1,7 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react';
 import { CheckIcon, XMarkIcon } from '@heroicons/react/24/solid';
-import { loadStripe } from '@stripe/stripe-js';
-import type { Stripe } from '@stripe/stripe-js';
 import React, { Fragment, useState } from 'react';
 
 interface Props {
@@ -22,11 +20,6 @@ const PricingModal: React.FC<Props> = ({ open, onClose, userId }) => {
     setError(null);
 
     try {
-      const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
-      if (!stripePublishableKey) {
-        throw new Error('Stripe publishable key is not configured. Add VITE_STRIPE_PUBLISHABLE_KEY to Vercel.');
-      }
-
       const priceId = selectedPlan === 'monthly' 
         ? import.meta.env.VITE_STRIPE_PRICE_ID_MONTHLY 
         : import.meta.env.VITE_STRIPE_PRICE_ID_YEARLY;
@@ -35,20 +28,15 @@ const PricingModal: React.FC<Props> = ({ open, onClose, userId }) => {
         throw new Error(`Price ID for ${selectedPlan} plan is missing. Add VITE_STRIPE_PRICE_ID_${selectedPlan.toUpperCase()} to Vercel.`);
       }
 
-      console.log('Checkout request:', { priceId, userId, selectedPlan });
-
-      // Use Vercel serverless function or API endpoint
+      // Call the serverless function to create checkout session
       const response = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ priceId, userId }),
       });
 
-      console.log('Response status:', response.status);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('API error response:', errorText);
         let errorMessage = 'Failed to create checkout session.';
         try {
           const errorData = JSON.parse(errorText);
@@ -59,20 +47,14 @@ const PricingModal: React.FC<Props> = ({ open, onClose, userId }) => {
         throw new Error(errorMessage);
       }
 
-      const { sessionId } = await response.json();
-      const stripe = await loadStripe(stripePublishableKey);
+      const { url } = await response.json();
       
-      if (!stripe) {
-        throw new Error('Failed to load payment processor.');
+      if (!url) {
+        throw new Error('No checkout URL returned from server.');
       }
 
-      const result = await (stripe as Stripe & { 
-        redirectToCheckout: (opts: { sessionId: string }) => Promise<{ error?: { message: string } }> 
-      }).redirectToCheckout({ sessionId });
-
-      if (result.error) {
-        throw new Error(result.error.message);
-      }
+      // Redirect directly to Stripe Checkout (new approach)
+      window.location.href = url;
     } catch (err) {
       console.error('Checkout error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred.');

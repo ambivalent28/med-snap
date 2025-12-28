@@ -1,0 +1,21 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Clean gradient background -->
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ea580c;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#f97316;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Rounded square background -->
+  <rect width="32" height="32" rx="8" fill="url(#bg)"/>
+  
+  <!-- Medical cross with document fold -->
+  <path d="M16 9 L16 23 M10 16 L22 16" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  
+  <!-- Document corner fold -->
+  <path d="M20 8 L20 12 L24 12" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+  
+  <!-- Accent dot -->
+  <circle cx="16" cy="16" r="1.5" fill="white" opacity="0.9"/>
+</svg>

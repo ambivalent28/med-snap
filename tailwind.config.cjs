@@ -1,20 +1,22 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
         brand: {
-          50: "#f2f8ff",
-          100: "#e6f1ff",
-          200: "#c5ddff",
-          300: "#97c0ff",
-          400: "#5c96ff",
-          500: "#2f6bff",
-          600: "#1d51e6",
-          700: "#1740b3",
-          800: "#14378c",
-          900: "#122f71"
+          50: "#fff7ed",
+          100: "#ffedd5",
+          200: "#fed7aa",
+          300: "#fdba74",
+          400: "#fb923c",
+          500: "#f97316",
+          600: "#ea580c", // Primary deep orange
+          700: "#c2410c",
+          800: "#9a3412",
+          900: "#7c2d12",
+          950: "#431407"
         }
       }
     }

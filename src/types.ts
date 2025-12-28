@@ -1,4 +1,4 @@
-export type FileType = 'pdf' | 'image';
+export type FileType = 'pdf' | 'image' | 'word';
 
 export interface Guideline {
   id: string;
@@ -16,7 +16,7 @@ export interface Guideline {
 export interface UploadFormValues {
   title: string;
   category: string;
-  tags: string;
+  tags: string[];
   notes: string;
   source_url: string;
   confirmNoPhi: boolean;

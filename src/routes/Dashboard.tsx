@@ -98,25 +98,50 @@ export default function Dashboard() {
         .single();
 
       if (error) {
-        console.error('Error loading profile:', error);
-        // Default to free tier
-        setProfile({
-          upload_count: guidelines.length,
-          subscription_status: 'inactive',
-          subscription_plan: 'free',
-        });
+        // Profile doesn't exist - create one
+        if (error.code === 'PGRST116') {
+          console.log('Creating new profile for user:', user.id);
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              user_id: user.id,
+              email: user.email,
+              upload_count: 0,
+              subscription_status: 'free',
+              subscription_plan: 'free',
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            console.error('Error creating profile:', createError);
+          }
+          
+          setProfile({
+            upload_count: newProfile?.upload_count ?? 0,
+            subscription_status: newProfile?.subscription_status ?? 'free',
+            subscription_plan: newProfile?.subscription_plan ?? 'free',
+          });
+        } else {
+          console.error('Error loading profile:', error);
+          setProfile({
+            upload_count: 0,
+            subscription_status: 'free',
+            subscription_plan: 'free',
+          });
+        }
       } else {
         setProfile({
-          upload_count: data?.upload_count ?? guidelines.length,
-          subscription_status: data?.subscription_status ?? 'inactive',
+          upload_count: data?.upload_count ?? 0,
+          subscription_status: data?.subscription_status ?? 'free',
           subscription_plan: data?.subscription_plan ?? 'free',
         });
       }
     } catch (error) {
       console.error('Error loading profile:', error);
       setProfile({
-        upload_count: guidelines.length,
-        subscription_status: 'inactive',
+        upload_count: 0,
+        subscription_status: 'free',
         subscription_plan: 'free',
       });
     }
@@ -458,18 +483,18 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 px-8 py-8">
-      <header className="mx-auto flex max-w-6xl items-center justify-between rounded-2xl bg-slate-800 border border-slate-700 px-6 py-4 shadow-sm glass-panel">
-        {/* Left side - Logo, Account Info, and Usage */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <img src="/logo.svg" alt="MedSnap" className="h-6 w-6" />
-            <span className="text-sm font-semibold text-brand-500">MedSnap</span>
+    <div className="min-h-screen bg-slate-900 px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <header className="mx-auto flex max-w-6xl items-center justify-between rounded-xl sm:rounded-2xl bg-slate-800 border border-slate-700 px-3 sm:px-6 py-3 sm:py-4 shadow-sm glass-panel">
+        {/* Left side - Logo and Account Info */}
+        <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <img src="/logo.svg" alt="MedSnap" className="h-5 w-5 sm:h-6 sm:w-6" />
+            <span className="text-xs sm:text-sm font-semibold text-brand-500 hidden xs:inline">MedSnap</span>
           </div>
-          <div className="h-6 w-px bg-slate-600" />
           
-          {/* Account Info */}
-          <div className="flex items-center gap-3">
+          {/* Account Info - hidden on mobile */}
+          <div className="hidden md:flex items-center gap-3">
+            <div className="h-6 w-px bg-slate-600" />
             <div className="text-left">
               <p className="text-xs font-medium text-slate-300">{user.email}</p>
               <p className="text-xs text-slate-500">
@@ -478,49 +503,47 @@ export default function Dashboard() {
             </div>
           </div>
           
-          <div className="h-6 w-px bg-slate-600" />
-          
-          {/* Usage Indicator - now uses guidelines.length for accuracy */}
-          <div className="flex items-center gap-2 rounded-lg bg-slate-700/50 px-3 py-1.5">
-            <span className="text-xs font-medium text-slate-300">
-              {profile?.subscription_status === 'active' ? (
-                <span className="text-brand-400">Pro Plan</span>
-              ) : (
-                <>
-                  <span className="text-slate-400">Free:</span>{' '}
+          {/* Usage Indicator */}
+          <div className="hidden sm:flex items-center">
+            <div className="h-6 w-px bg-slate-600 mr-3" />
+            <div className="flex items-center gap-2 rounded-lg bg-slate-700/50 px-2 sm:px-3 py-1 sm:py-1.5">
+              <span className="text-[10px] sm:text-xs font-medium text-slate-300">
+                {profile?.subscription_status === 'active' ? (
+                  <span className="text-brand-400">Pro</span>
+                ) : (
                   <span className={guidelines.length >= FREE_UPLOAD_LIMIT ? 'text-red-400' : 'text-brand-400'}>
-                    {Math.max(0, FREE_UPLOAD_LIMIT - guidelines.length)} remaining
+                    {Math.max(0, FREE_UPLOAD_LIMIT - guidelines.length)} left
                   </span>
-                </>
-              )}
-            </span>
+                )}
+              </span>
+            </div>
           </div>
         </div>
         
-        {/* Right side - Upgrade and Upload Button */}
-        <div className="flex items-center gap-3">
+        {/* Right side - Actions */}
+        <div className="flex items-center gap-1.5 sm:gap-3">
           {profile && profile.subscription_status !== 'active' && (
             <button
               onClick={() => setPricingOpen(true)}
-              className="rounded-lg bg-brand-600/20 border border-brand-600/50 px-3 py-1.5 text-xs font-semibold text-brand-400 transition hover:bg-brand-600/30"
+              className="rounded-lg bg-brand-600/20 border border-brand-600/50 px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold text-brand-400 transition hover:bg-brand-600/30"
             >
               Upgrade
             </button>
           )}
           <button
             onClick={() => setProfileOpen(true)}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-400 hover:bg-slate-700 hover:text-slate-300"
+            className="flex items-center gap-1 sm:gap-1.5 rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold text-slate-400 hover:bg-slate-700 hover:text-slate-300"
           >
-            <UserCircleIcon className="h-4 w-4" />
-            Account
+            <UserCircleIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Account</span>
           </button>
           <button
             onClick={handleSignOut}
-            className="rounded-lg px-3 py-1.5 text-xs font-semibold text-slate-400 hover:bg-slate-700 hover:text-slate-300"
+            className="hidden sm:block rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold text-slate-400 hover:bg-slate-700 hover:text-slate-300"
           >
             Sign Out
           </button>
-          <div className="h-6 w-px bg-slate-600" />
+          <div className="h-5 sm:h-6 w-px bg-slate-600 hidden sm:block" />
           <button
             onClick={() => {
               const subscriptionStatus = profile?.subscription_status;
@@ -533,16 +556,17 @@ export default function Dashboard() {
                 setUploadOpen(true);
               }
             }}
-            className="flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-all duration-200 hover:bg-emerald-500 hover:scale-105 hover:shadow-emerald-500/30 active:scale-95"
+            className="flex items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl bg-emerald-600 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-all duration-200 hover:bg-emerald-500 hover:scale-105 hover:shadow-emerald-500/30 active:scale-95"
           >
-            <PlusIcon className="h-5 w-5" />
-            Upload
+            <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+            <span className="hidden xs:inline">Upload</span>
           </button>
         </div>
       </header>
 
-      <main className="mx-auto mt-6 flex max-w-6xl gap-6">
-        <div className="w-64 space-y-4">
+      <main className="mx-auto mt-4 sm:mt-6 flex max-w-6xl gap-4 sm:gap-6">
+        {/* Sidebar - hidden on mobile */}
+        <div className="hidden md:block w-56 lg:w-64 space-y-4 flex-shrink-0">
           <Sidebar 
             categories={categories} 
             selected={category} 
@@ -551,37 +575,41 @@ export default function Dashboard() {
             onUpdateGuidelineCategory={handleUpdateGuidelineCategory}
           />
         </div>
-        <div className="flex-1 space-y-4">
-          <div className="flex items-center gap-4 rounded-2xl bg-slate-800 border border-slate-700 px-4 py-3 shadow-sm glass-panel">
+        <div className="flex-1 space-y-3 sm:space-y-4 min-w-0">
+          {/* Search and Filters Bar */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 rounded-xl sm:rounded-2xl bg-slate-800 border border-slate-700 px-3 sm:px-4 py-2.5 sm:py-3 shadow-sm glass-panel">
             <div className="flex-1">
               <SearchBar value={search} onChange={setSearch} />
             </div>
             
-            {/* Sort Dropdown */}
             <div className="flex items-center gap-2">
-              <ArrowsUpDownIcon className="h-4 w-4 text-slate-400" />
+              {/* Category filter for mobile */}
               <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                className="rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-200 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                value={category || ''}
+                onChange={(e) => setCategory(e.target.value || null)}
+                className="md:hidden rounded-lg border border-slate-600 bg-slate-700 px-2 py-1.5 text-xs text-slate-200 focus:border-brand-500 focus:outline-none flex-1"
               >
-                <option value="date-desc">Newest First</option>
-                <option value="date-asc">Oldest First</option>
-                <option value="alpha-asc">A → Z</option>
-                <option value="alpha-desc">Z → A</option>
+                <option value="">All Categories</option>
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
               </select>
+              
+              {/* Sort Dropdown */}
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <ArrowsUpDownIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400 hidden sm:block" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  className="rounded-lg border border-slate-600 bg-slate-700 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-slate-200 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                >
+                  <option value="date-desc">Newest</option>
+                  <option value="date-asc">Oldest</option>
+                  <option value="alpha-asc">A → Z</option>
+                  <option value="alpha-desc">Z → A</option>
+                </select>
+              </div>
             </div>
-            
-            <button
-              onClick={() => {
-                // Search is already handled by the filtered useMemo, this button is just for UX
-                // The search happens automatically as the user types, but this provides a visual action
-                (document.querySelector('input[type="search"]') as HTMLInputElement | null)?.focus();
-              }}
-              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
-            >
-              Search
-            </button>
           </div>
 
           {/* Limit Reached Banner */}
@@ -590,11 +618,11 @@ export default function Dashboard() {
           )}
 
           {loading ? (
-            <div className="col-span-full rounded-xl border border-dashed border-slate-700 bg-slate-800/60 p-6 text-center text-slate-400">
+            <div className="col-span-full rounded-xl border border-dashed border-slate-700 bg-slate-800/60 p-4 sm:p-6 text-center text-sm text-slate-400">
               Loading your references...
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
               {filtered.map((guideline) => (
                 <GuidelineCard
                   key={guideline.id}
@@ -604,7 +632,7 @@ export default function Dashboard() {
                 />
               ))}
               {filtered.length === 0 && (
-                <div className="col-span-full rounded-xl border border-dashed border-slate-700 bg-slate-800/60 p-6 text-center text-slate-400">
+                <div className="col-span-full rounded-xl border border-dashed border-slate-700 bg-slate-800/60 p-4 sm:p-6 text-center text-sm text-slate-400">
                   No references yet. Upload your first file to get started.
                 </div>
               )}

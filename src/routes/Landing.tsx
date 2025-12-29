@@ -98,21 +98,21 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-slate-900">
       {/* Header */}
-      <header className="mx-auto flex max-w-7xl items-center justify-between px-6 py-6">
+      <header className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-4 sm:py-6">
         <div className="flex items-center gap-2">
-          <img src="/logo.svg" alt="MedSnap" className="h-8 w-8" />
-          <span className="text-lg font-semibold text-brand-500">MedSnap</span>
+          <img src="/logo.svg" alt="MedSnap" className="h-7 w-7 sm:h-8 sm:w-8" />
+          <span className="text-base sm:text-lg font-semibold text-brand-500">MedSnap</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <button
             onClick={() => { setAuthMode('signin'); setAuthModalOpen(true); }}
-            className="text-sm font-medium text-slate-300 hover:text-brand-400"
+            className="text-xs sm:text-sm font-medium text-slate-300 hover:text-brand-400"
           >
             Sign In
           </button>
           <button
             onClick={() => { setAuthMode('signup'); setAuthModalOpen(true); }}
-            className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
+            className="rounded-lg bg-brand-600 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
           >
             Get Started
           </button>
@@ -120,29 +120,30 @@ export default function Landing() {
       </header>
 
       {/* Hero */}
-      <section className="mx-auto max-w-7xl px-6 pt-16 pb-8 text-center">
-        <h1 className="text-4xl font-bold text-slate-100 sm:text-5xl md:text-6xl leading-tight">
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 pt-10 sm:pt-16 pb-8 text-center">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-slate-100 leading-tight">
           Stop re-Googling the same
-          <br />
+          <br className="hidden sm:block" />
+          <span className="sm:hidden"> </span>
           <span className="text-brand-500">clinical guidelines.</span>
         </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-300 sm:text-xl">
+        <p className="mx-auto mt-4 sm:mt-6 max-w-2xl text-base sm:text-lg md:text-xl text-slate-300 px-2">
           Upload your trusted PDFs, screenshots, and reference documents into a personal clinical library — accessible anywhere you work.
         </p>
-        <div className="mt-10 flex items-center justify-center">
+        <div className="mt-8 sm:mt-10 flex items-center justify-center">
           <button
             onClick={() => { setAuthMode('signup'); setAuthModalOpen(true); }}
-            className="flex items-center gap-2 rounded-lg bg-brand-600 px-8 py-4 text-lg font-semibold text-white shadow-sm transition hover:bg-brand-700"
+            className="flex items-center gap-2 rounded-lg bg-brand-600 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white shadow-sm transition hover:bg-brand-700"
           >
             Get Started Free
-            <ArrowRightIcon className="h-5 w-5" />
+            <ArrowRightIcon className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
-        <p className="mt-4 text-sm text-slate-400">10 free guideline uploads — no credit card required</p>
+        <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-slate-400">10 free guideline uploads — no credit card required</p>
       </section>
 
-      {/* App Preview */}
-      <section className="mx-auto max-w-6xl px-6 pb-20">
+      {/* App Preview - Hidden on mobile, shown on tablet+ */}
+      <section className="mx-auto max-w-6xl px-4 sm:px-6 pb-12 sm:pb-20 hidden sm:block">
         <div className="relative rounded-2xl border border-slate-700 bg-gradient-to-b from-slate-800 to-slate-900 p-2 shadow-2xl shadow-brand-900/20">
           <div className="flex items-center gap-2 rounded-t-xl bg-slate-800 px-4 py-3 border-b border-slate-700">
             <div className="flex gap-1.5">
@@ -165,8 +166,8 @@ export default function Landing() {
                   <div className="w-5 h-5 rounded bg-brand-600" />
                   <span className="text-sm font-semibold text-brand-500">MedSnap</span>
                 </div>
-                <div className="h-4 w-px bg-slate-600" />
-                <span className="text-xs text-slate-400">dr.example@hospital.org</span>
+                <div className="h-4 w-px bg-slate-600 hidden md:block" />
+                <span className="text-xs text-slate-400 hidden md:block">dr.example@hospital.org</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 bg-emerald-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold">
@@ -177,7 +178,7 @@ export default function Landing() {
             </div>
             
             <div className="flex gap-4">
-              <div className="w-44 rounded-xl bg-slate-800 border border-slate-700 p-3 space-y-2">
+              <div className="w-36 lg:w-44 rounded-xl bg-slate-800 border border-slate-700 p-3 space-y-2 hidden md:block">
                 <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Categories</span>
                 <div className="text-xs text-brand-400 bg-brand-900/50 px-2 py-1.5 rounded">All <span className="text-slate-500">(12)</span></div>
                 <div className="text-xs text-slate-300 px-2 py-1.5 hover:bg-slate-700 rounded">Cardiology <span className="text-slate-500">(4)</span></div>
@@ -192,12 +193,12 @@ export default function Landing() {
                     <MagnifyingGlassIcon className="h-3.5 w-3.5 text-slate-400" />
                     <span className="text-xs text-slate-400">Search by title...</span>
                   </div>
-                  <select className="text-[10px] text-slate-300 bg-slate-700 border border-slate-600 rounded px-2 py-1">
+                  <select className="text-[10px] text-slate-300 bg-slate-700 border border-slate-600 rounded px-2 py-1 hidden sm:block">
                     <option>Newest</option>
                   </select>
                 </div>
                 
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                   <div className="rounded-xl bg-slate-800 border border-slate-700 p-3">
                     <div className="aspect-[4/3] rounded-lg bg-gradient-to-br from-red-900/30 to-red-800/20 border border-red-900/30 mb-2 flex items-center justify-center">
                       <DocumentTextIcon className="h-8 w-8 text-red-500/50" />
@@ -212,7 +213,7 @@ export default function Landing() {
                     <h4 className="text-xs font-semibold text-slate-200 truncate">Sepsis Bundle</h4>
                     <p className="text-[10px] text-slate-500">Emergency • PDF</p>
                   </div>
-                  <div className="rounded-xl bg-slate-800 border border-slate-700 p-3">
+                  <div className="rounded-xl bg-slate-800 border border-slate-700 p-3 hidden lg:block">
                     <div className="aspect-[4/3] rounded-lg bg-gradient-to-br from-emerald-900/30 to-emerald-800/20 border border-emerald-900/30 mb-2 flex items-center justify-center">
                       <DocumentTextIcon className="h-8 w-8 text-emerald-500/50" />
                     </div>
@@ -233,7 +234,7 @@ export default function Landing() {
                     <h4 className="text-xs font-semibold text-slate-200 truncate">AF Management</h4>
                     <p className="text-[10px] text-slate-500">Cardiology • PDF</p>
                   </div>
-                  <div className="rounded-xl bg-slate-800 border border-slate-700 p-3">
+                  <div className="rounded-xl bg-slate-800 border border-slate-700 p-3 hidden lg:block">
                     <div className="aspect-[4/3] rounded-lg bg-gradient-to-br from-cyan-900/30 to-cyan-800/20 border border-cyan-900/30 mb-2 flex items-center justify-center">
                       <DocumentTextIcon className="h-8 w-8 text-cyan-500/50" />
                     </div>
@@ -248,18 +249,18 @@ export default function Landing() {
       </section>
 
       {/* Benefits */}
-      <section className="mx-auto max-w-7xl px-6 py-20">
-        <h2 className="text-center text-3xl font-bold text-slate-100 mb-12">Why MedSnap?</h2>
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-20">
+        <h2 className="text-center text-2xl sm:text-3xl font-bold text-slate-100 mb-8 sm:mb-12">Why MedSnap?</h2>
+        <div className="grid grid-cols-1 gap-4 sm:gap-8 md:grid-cols-3">
           {benefits.map((benefit, idx) => {
             const Icon = benefit.icon;
             return (
-              <div key={idx} className="rounded-2xl bg-slate-800 border border-slate-700 p-8">
-                <div className="mb-4 inline-flex items-center justify-center rounded-xl bg-brand-600/20 p-3">
-                  <Icon className="h-6 w-6 text-brand-400" />
+              <div key={idx} className="rounded-xl sm:rounded-2xl bg-slate-800 border border-slate-700 p-5 sm:p-8">
+                <div className="mb-3 sm:mb-4 inline-flex items-center justify-center rounded-lg sm:rounded-xl bg-brand-600/20 p-2.5 sm:p-3">
+                  <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-brand-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-slate-100 mb-3">{benefit.title}</h3>
-                <p className="text-slate-300">{benefit.description}</p>
+                <h3 className="text-lg sm:text-xl font-semibold text-slate-100 mb-2 sm:mb-3">{benefit.title}</h3>
+                <p className="text-sm sm:text-base text-slate-300">{benefit.description}</p>
               </div>
             );
           })}
@@ -267,19 +268,19 @@ export default function Landing() {
       </section>
 
       {/* Features */}
-      <section className="mx-auto max-w-5xl px-6 py-20">
-        <h2 className="text-center text-3xl font-bold text-slate-100 mb-4">How It Works</h2>
-        <p className="text-center text-slate-400 mb-12 max-w-2xl mx-auto">Upload. Organise. Find it when you need it.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <section className="mx-auto max-w-5xl px-4 sm:px-6 py-12 sm:py-20">
+        <h2 className="text-center text-2xl sm:text-3xl font-bold text-slate-100 mb-3 sm:mb-4">How It Works</h2>
+        <p className="text-center text-sm sm:text-base text-slate-400 mb-8 sm:mb-12 max-w-2xl mx-auto">Upload. Organise. Find it when you need it.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {features.map((feature, idx) => {
             const Icon = feature.icon;
             return (
-              <div key={idx} className="rounded-2xl bg-slate-800/50 border border-slate-700 p-6 hover:border-slate-600 transition-all">
-                <div className="mb-4 inline-flex items-center justify-center rounded-xl bg-brand-600/20 p-3">
-                  <Icon className="h-6 w-6 text-brand-400" />
+              <div key={idx} className="rounded-xl sm:rounded-2xl bg-slate-800/50 border border-slate-700 p-4 sm:p-6 hover:border-slate-600 transition-all">
+                <div className="mb-3 sm:mb-4 inline-flex items-center justify-center rounded-lg sm:rounded-xl bg-brand-600/20 p-2.5 sm:p-3">
+                  <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-brand-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-100 mb-2">{feature.title}</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">{feature.description}</p>
+                <h3 className="text-base sm:text-lg font-semibold text-slate-100 mb-1.5 sm:mb-2">{feature.title}</h3>
+                <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">{feature.description}</p>
               </div>
             );
           })}
@@ -287,78 +288,78 @@ export default function Landing() {
       </section>
 
       {/* Pricing */}
-      <section className="mx-auto max-w-7xl px-6 py-20">
-        <div className="mx-auto max-w-4xl rounded-2xl bg-slate-800 border border-slate-700 p-12">
-          <h2 className="text-center text-3xl font-bold text-slate-100">Pricing</h2>
-          <p className="mt-4 text-center text-lg text-slate-300">Full access. Upgrade when you need more uploads.</p>
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 py-12 sm:py-20">
+        <div className="mx-auto max-w-4xl rounded-xl sm:rounded-2xl bg-slate-800 border border-slate-700 p-6 sm:p-12">
+          <h2 className="text-center text-2xl sm:text-3xl font-bold text-slate-100">Pricing</h2>
+          <p className="mt-3 sm:mt-4 text-center text-sm sm:text-lg text-slate-300">Full access. Upgrade when you need more uploads.</p>
 
-          <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2">
-            <div className="rounded-xl bg-slate-900 border border-slate-700 p-8">
-              <h3 className="text-xl font-semibold text-slate-100">Free</h3>
-              <div className="mt-4">
-                <span className="text-lg text-slate-400">$</span><span className="text-4xl font-bold text-slate-100">0</span>
+          <div className="mt-8 sm:mt-12 grid grid-cols-1 gap-4 sm:gap-8 md:grid-cols-2">
+            <div className="rounded-lg sm:rounded-xl bg-slate-900 border border-slate-700 p-5 sm:p-8">
+              <h3 className="text-lg sm:text-xl font-semibold text-slate-100">Free</h3>
+              <div className="mt-3 sm:mt-4">
+                <span className="text-base sm:text-lg text-slate-400">$</span><span className="text-3xl sm:text-4xl font-bold text-slate-100">0</span>
               </div>
-              <ul className="mt-6 space-y-3 text-left">
-                <li className="flex items-center gap-2 text-sm text-slate-300">
-                  <CheckIcon className="h-5 w-5 text-brand-500" />
+              <ul className="mt-4 sm:mt-6 space-y-2 sm:space-y-3 text-left">
+                <li className="flex items-center gap-2 text-xs sm:text-sm text-slate-300">
+                  <CheckIcon className="h-4 w-4 sm:h-5 sm:w-5 text-brand-500 flex-shrink-0" />
                   <span>Full access</span>
                 </li>
-                <li className="flex items-center gap-2 text-sm text-slate-300">
-                  <CheckIcon className="h-5 w-5 text-brand-500" />
+                <li className="flex items-center gap-2 text-xs sm:text-sm text-slate-300">
+                  <CheckIcon className="h-4 w-4 sm:h-5 sm:w-5 text-brand-500 flex-shrink-0" />
                   <span>10 guideline uploads</span>
                 </li>
-                <li className="flex items-center gap-2 text-sm text-slate-300">
-                  <CheckIcon className="h-5 w-5 text-brand-500" />
+                <li className="flex items-center gap-2 text-xs sm:text-sm text-slate-300">
+                  <CheckIcon className="h-4 w-4 sm:h-5 sm:w-5 text-brand-500 flex-shrink-0" />
                   <span>Unlimited viewing</span>
                 </li>
               </ul>
             </div>
 
-            <div className="relative rounded-xl bg-brand-900/30 border-2 border-brand-600 p-8">
-              <h3 className="text-xl font-semibold text-white">Pro</h3>
-              <div className="mt-4">
-                <span className="text-lg text-brand-300">$</span><span className="text-4xl font-bold text-white">5</span>
+            <div className="relative rounded-lg sm:rounded-xl bg-brand-900/30 border-2 border-brand-600 p-5 sm:p-8">
+              <h3 className="text-lg sm:text-xl font-semibold text-white">Pro</h3>
+              <div className="mt-3 sm:mt-4">
+                <span className="text-base sm:text-lg text-brand-300">$</span><span className="text-3xl sm:text-4xl font-bold text-white">5</span>
                 <span className="text-brand-200">/month</span>
               </div>
-              <div className="mt-2 text-sm text-brand-200">or $25/year (save 58%)</div>
-              <ul className="mt-6 space-y-3 text-left">
-                <li className="flex items-center gap-2 text-sm text-white">
-                  <CheckIcon className="h-5 w-5 text-white" />
+              <div className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-brand-200">or $25/year (save 58%)</div>
+              <ul className="mt-4 sm:mt-6 space-y-2 sm:space-y-3 text-left">
+                <li className="flex items-center gap-2 text-xs sm:text-sm text-white">
+                  <CheckIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white flex-shrink-0" />
                   <span>Unlimited uploads</span>
                 </li>
               </ul>
             </div>
           </div>
 
-          <div className="mt-10 text-center">
+          <div className="mt-8 sm:mt-10 text-center">
             <button
               onClick={() => { setAuthMode('signup'); setAuthModalOpen(true); }}
-              className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-8 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-brand-700"
+              className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white shadow-lg transition hover:bg-brand-700"
             >
               Get Started Free
-              <ArrowRightIcon className="h-5 w-5" />
+              <ArrowRightIcon className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
-            <p className="mt-3 text-sm text-slate-400">10 free guideline uploads — upgrade anytime</p>
+            <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-slate-400">10 free guideline uploads — upgrade anytime</p>
           </div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="mx-auto max-w-4xl px-6 py-20">
-        <h2 className="text-center text-3xl font-bold text-slate-100 mb-12">Questions</h2>
-        <div className="space-y-4">
+      <section className="mx-auto max-w-4xl px-4 sm:px-6 py-12 sm:py-20">
+        <h2 className="text-center text-2xl sm:text-3xl font-bold text-slate-100 mb-8 sm:mb-12">Questions</h2>
+        <div className="space-y-3 sm:space-y-4">
           {faqs.map((faq, idx) => (
-            <div key={idx} className="rounded-xl bg-slate-800 border border-slate-700 overflow-hidden">
+            <div key={idx} className="rounded-lg sm:rounded-xl bg-slate-800 border border-slate-700 overflow-hidden">
               <button
                 onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                className="w-full flex items-center justify-between p-6 text-left"
+                className="w-full flex items-center justify-between p-4 sm:p-6 text-left gap-3"
               >
-                <span className="font-semibold text-slate-100">{faq.question}</span>
-                <ChevronDownIcon className={`h-5 w-5 text-slate-400 transition-transform ${openFaq === idx ? 'rotate-180' : ''}`} />
+                <span className="font-semibold text-sm sm:text-base text-slate-100">{faq.question}</span>
+                <ChevronDownIcon className={`h-4 w-4 sm:h-5 sm:w-5 text-slate-400 transition-transform flex-shrink-0 ${openFaq === idx ? 'rotate-180' : ''}`} />
               </button>
               {openFaq === idx && (
-                <div className="px-6 pb-6">
-                  <p className="text-slate-300">{faq.answer}</p>
+                <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+                  <p className="text-sm sm:text-base text-slate-300">{faq.answer}</p>
                 </div>
               )}
             </div>
@@ -367,8 +368,8 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="mx-auto max-w-7xl border-t border-slate-800 px-6 py-12">
-        <div className="text-center text-sm text-slate-400">
+      <footer className="mx-auto max-w-7xl border-t border-slate-800 px-4 sm:px-6 py-8 sm:py-12">
+        <div className="text-center text-xs sm:text-sm text-slate-400">
           <p>© 2025 Apogee Health Services (ACN: 673 390 657)</p>
         </div>
       </footer>

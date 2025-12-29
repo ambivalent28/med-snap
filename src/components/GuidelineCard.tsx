@@ -1,4 +1,4 @@
-import { TrashIcon } from '@heroicons/react/24/solid';
+import { TrashIcon, ChatBubbleBottomCenterTextIcon } from '@heroicons/react/24/solid';
 import React from 'react';
 import type { Guideline } from '../types';
 import ThumbnailPreview from './ThumbnailPreview';
@@ -54,9 +54,17 @@ const GuidelineCard: React.FC<Props> = ({ guideline, onOpen, onDelete, draggable
         <h4 className="text-sm font-semibold text-slate-200 truncate" title={guideline.title}>
           {guideline.title}
         </h4>
-        <p className="text-[11px] text-slate-500 mt-1">
-          {guideline.category || 'General'} • {guideline.file_type.toUpperCase()}
-        </p>
+        <div className="flex items-center gap-2 mt-1">
+          <p className="text-[11px] text-slate-500">
+            {guideline.category || 'General'} • {guideline.file_type.toUpperCase()}
+          </p>
+          {guideline.notes && (
+            <ChatBubbleBottomCenterTextIcon 
+              className="h-3 w-3 text-slate-500" 
+              title="Has notes"
+            />
+          )}
+        </div>
       </div>
     </div>
   );

@@ -218,71 +218,94 @@ const ViewerModal: React.FC<Props> = ({ open, guideline, onClose, onUpdate, onDe
 
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-150" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
-            <Dialog.Panel className="relative flex h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-2xl bg-slate-800 shadow-2xl">
+            <Dialog.Panel className="relative flex h-[95vh] sm:h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl sm:rounded-2xl bg-slate-800 shadow-2xl">
               
               {/* Header */}
-              <div className="flex items-center justify-between px-5 py-3 border-b border-slate-700 bg-slate-800">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-9 h-9 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
-                    {isPdf || isWord ? <DocumentIcon className="h-5 w-5 text-white" /> : <PhotoIcon className="h-5 w-5 text-white" />}
+              <div className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-b border-slate-700 bg-slate-800">
+                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                  <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-brand-600 flex items-center justify-center flex-shrink-0">
+                    {isPdf || isWord ? <DocumentIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white" /> : <PhotoIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />}
                   </div>
                   {isEditing ? (
                     <input
                       type="text"
                       value={editForm.title}
                       onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
-                      className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm font-medium text-white focus:border-brand-500 focus:outline-none"
+                      className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-white focus:border-brand-500 focus:outline-none"
                       placeholder="Title..."
                     />
                   ) : (
                     <div className="min-w-0">
-                      <h2 className="text-base font-semibold text-white truncate">{guideline.title}</h2>
-                      <p className="text-xs text-slate-400">{guideline.category || 'General'} • {guideline.file_type.toUpperCase()}</p>
+                      <h2 className="text-sm sm:text-base font-semibold text-white truncate">{guideline.title}</h2>
+                      <p className="text-[10px] sm:text-xs text-slate-400">{guideline.category || 'General'} • {guideline.file_type.toUpperCase()}</p>
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                   {!isEditing && (
                     <>
-                      <a href={guideline.file_path} target="_blank" rel="noopener noreferrer" className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700">
+                      <a href={guideline.file_path} target="_blank" rel="noopener noreferrer" className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 hidden sm:block">
                         <ArrowTopRightOnSquareIcon className="h-4 w-4" />
                       </a>
-                      <a href={guideline.file_path} download className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700">
+                      <a href={guideline.file_path} download className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700">
                         <ArrowDownTrayIcon className="h-4 w-4" />
                       </a>
                     </>
                   )}
                   {isEditing ? (
                     <>
-                      <button onClick={handleCancel} className="px-3 py-1.5 rounded-lg text-sm text-slate-400 hover:text-white hover:bg-slate-700">Cancel</button>
-                      <button onClick={handleSave} disabled={saving || !editForm.title.trim()} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">
-                        <CheckIcon className="h-4 w-4" />
+                      <button onClick={handleCancel} className="px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm text-slate-400 hover:text-white hover:bg-slate-700">Cancel</button>
+                      <button onClick={handleSave} disabled={saving || !editForm.title.trim()} className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">
+                        <CheckIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         {saving ? 'Saving...' : 'Save'}
                       </button>
                     </>
                   ) : (
                     onUpdate && (
-                      <button onClick={() => setIsEditing(true)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600">
-                        <PencilIcon className="h-4 w-4" />
-                        Edit
+                      <button onClick={() => setIsEditing(true)} className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm text-slate-300 hover:text-white bg-slate-700 hover:bg-slate-600">
+                        <PencilIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        <span className="hidden xs:inline">Edit</span>
                       </button>
                     )
                   )}
-                  <button onClick={onClose} className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700">
-                    <XMarkIcon className="h-5 w-5" />
+                  <button onClick={onClose} className="p-1.5 sm:p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700">
+                    <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
                 </div>
               </div>
 
+              {/* Notes/URL Bar - only show in view mode if they exist */}
+              {!isEditing && (guideline.notes || guideline.source_url) && (
+                <div className="px-3 sm:px-5 py-2 sm:py-3 border-b border-slate-700 bg-slate-800/50 flex flex-wrap items-center gap-2 sm:gap-4 text-sm">
+                  {guideline.notes && (
+                    <div className="flex items-start gap-1.5 sm:gap-2 flex-1 min-w-0">
+                      <span className="text-slate-500 text-[10px] sm:text-xs font-medium shrink-0">Note:</span>
+                      <p className="text-slate-300 text-[10px] sm:text-xs leading-relaxed line-clamp-2 sm:line-clamp-none">{guideline.notes}</p>
+                    </div>
+                  )}
+                  {guideline.source_url && (
+                    <a
+                      href={guideline.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs text-brand-400 hover:text-brand-300 shrink-0"
+                    >
+                      <ArrowTopRightOnSquareIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      Source
+                    </a>
+                  )}
+                </div>
+              )}
+
               {/* Main Content */}
-              <div className="flex-1 flex overflow-hidden">
-                <div className={`${isEditing ? 'w-1/2' : 'w-full'} h-full bg-slate-900 overflow-hidden transition-all duration-200`}>
+              <div className="flex-1 flex flex-col sm:flex-row overflow-hidden">
+                <div className={`${isEditing ? 'h-1/2 sm:h-full sm:w-1/2' : 'h-full w-full'} bg-slate-900 overflow-hidden transition-all duration-200`}>
                   {renderFilePreview()}
                 </div>
 
                 {isEditing && (
-                  <div className="w-1/2 h-full overflow-y-auto border-l border-slate-700 bg-slate-800 p-5 space-y-4">
+                  <div className="h-1/2 sm:h-full sm:w-1/2 overflow-y-auto border-t sm:border-t-0 sm:border-l border-slate-700 bg-slate-800 p-3 sm:p-5 space-y-3 sm:space-y-4">
                     {/* Category */}
                     <div>
                       <label className="block text-xs font-medium text-slate-400 mb-2">Category</label>

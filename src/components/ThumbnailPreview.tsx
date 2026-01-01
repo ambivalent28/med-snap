@@ -16,12 +16,26 @@ const ThumbnailPreview: React.FC<Props> = ({ filePath, fileType, title }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  // Check if the file path is a valid URL
+  const isValidUrl = filePath && (
+    filePath.startsWith('http://') || 
+    filePath.startsWith('https://') ||
+    filePath.startsWith('blob:')
+  );
+
   useEffect(() => {
     let cancelled = false;
 
     const generateThumbnail = async () => {
       setLoading(true);
       setError(false);
+
+      // Skip if URL is invalid
+      if (!isValidUrl) {
+        setError(true);
+        setLoading(false);
+        return;
+      }
 
       try {
         if (fileType === 'image') {
@@ -36,7 +50,7 @@ const ThumbnailPreview: React.FC<Props> = ({ filePath, fileType, title }) => {
           setLoading(false);
         }
       } catch (err) {
-        console.error('Thumbnail generation error:', err);
+        // Only log actual errors, not expected failures from invalid URLs
         if (!cancelled) {
           setError(true);
           setLoading(false);
@@ -88,7 +102,7 @@ const ThumbnailPreview: React.FC<Props> = ({ filePath, fileType, title }) => {
     return () => {
       cancelled = true;
     };
-  }, [filePath, fileType]);
+  }, [filePath, fileType, isValidUrl]);
 
   // Loading state - simple gray placeholder
   if (loading) {

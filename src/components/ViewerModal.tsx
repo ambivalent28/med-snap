@@ -185,8 +185,27 @@ const ViewerModal: React.FC<Props> = ({ open, guideline, onClose, onUpdate, onDe
 
   const isPdf = guideline.file_type === 'pdf';
   const isWord = guideline.file_type === 'word';
+  
+  // Check if the file path is a valid URL (not a relative path or missing)
+  const isValidUrl = guideline.file_path && (
+    guideline.file_path.startsWith('http://') || 
+    guideline.file_path.startsWith('https://') ||
+    guideline.file_path.startsWith('blob:')
+  );
 
   const renderFilePreview = () => {
+    // Show error if file path is invalid
+    if (!isValidUrl) {
+      return (
+        <div className="flex h-full flex-col items-center justify-center p-8 text-center bg-slate-900">
+          <DocumentIcon className="h-16 w-16 text-slate-600 mb-4" />
+          <p className="text-red-400 text-sm font-medium">File not found</p>
+          <p className="text-slate-500 text-xs mt-2">This file may have been deleted or is unavailable.</p>
+          <p className="text-slate-600 text-xs mt-1">Try deleting this guideline and re-uploading.</p>
+        </div>
+      );
+    }
+    
     if (isPdf) {
       return <iframe src={guideline.file_path} className="w-full h-full bg-white" title={guideline.title} />;
     }

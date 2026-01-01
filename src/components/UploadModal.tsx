@@ -12,6 +12,10 @@ const allowedTypes = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 ];
 
+// 50MB limit (Supabase free tier limit)
+const MAX_FILE_SIZE_MB = 50;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -60,18 +64,29 @@ const UploadModal: React.FC<Props> = ({ open, onClose, onSubmit, existingCategor
 
   const onDrop = useCallback((accepted: File[]) => {
     const picked = accepted[0];
-    if (picked && allowedTypes.includes(picked.type)) {
-      setFile(picked);
-      setError(null);
-      if (picked.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => setPreview(e.target?.result as string);
-        reader.readAsDataURL(picked);
-      } else {
-        setPreview(null);
-      }
-    } else {
+    if (!picked) return;
+    
+    // Check file type
+    if (!allowedTypes.includes(picked.type)) {
       setError('Only PDF, Word documents, PNG, and JPG files are allowed.');
+      return;
+    }
+    
+    // Check file size
+    if (picked.size > MAX_FILE_SIZE_BYTES) {
+      const sizeMB = (picked.size / 1024 / 1024).toFixed(1);
+      setError(`File is too large (${sizeMB}MB). Maximum size is ${MAX_FILE_SIZE_MB}MB.`);
+      return;
+    }
+    
+    setFile(picked);
+    setError(null);
+    if (picked.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => setPreview(e.target?.result as string);
+      reader.readAsDataURL(picked);
+    } else {
+      setPreview(null);
     }
   }, []);
 

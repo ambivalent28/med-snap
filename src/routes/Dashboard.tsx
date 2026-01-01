@@ -100,7 +100,7 @@ export default function Dashboard() {
       if (error) {
         // Profile doesn't exist - create one
         if (error.code === 'PGRST116') {
-          console.log('Creating new profile for user:', user.id);
+          // Creating new profile for user
           const { data: newProfile, error: createError } = await supabase
             .from('profiles')
             .insert({

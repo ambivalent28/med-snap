@@ -43,7 +43,9 @@ export default async function handler(
       return res.status(500).json({ error: 'Server configuration error' });
     }
 
-    const stripe = new Stripe(stripeSecretKey, { apiVersion: '2023-10-16' });
+    const stripe = new Stripe(stripeSecretKey, { 
+      apiVersion: '2023-10-16' as any 
+    });
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get raw body for signature verification

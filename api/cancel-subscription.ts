@@ -49,11 +49,12 @@ export default async function handler(
       .single();
 
     if (profileError || !profile?.stripe_customer_id) {
-      // No Stripe customer ID, just update the profile
+      // No Stripe customer ID, just update the profile to cancelling
+      // (user might have paid but customer ID wasn't saved)
       await supabase
         .from('profiles')
         .update({
-          subscription_status: 'cancelled',
+          subscription_status: 'cancelling',
           updated_at: new Date().toISOString(),
         })
         .eq('user_id', userId);

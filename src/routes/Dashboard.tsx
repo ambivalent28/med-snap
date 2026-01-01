@@ -673,7 +673,11 @@ export default function Dashboard() {
           onClose={() => setProfileOpen(false)}
           user={{ email: user.email || '', id: user.id }}
           profile={profile}
-          onSubscriptionCancelled={() => loadProfile()}
+          onSubscriptionCancelled={async () => {
+            await loadProfile();
+            // Force a small delay to ensure state updates
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }}
         />
       )}
     </div>

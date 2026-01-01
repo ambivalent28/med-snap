@@ -6,7 +6,7 @@ import {
   CreditCardIcon,
   ExclamationTriangleIcon 
 } from '@heroicons/react/24/solid';
-import React, { Fragment, useState } from 'react';
+import React, { Fragment, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
 interface Props {
@@ -40,6 +40,13 @@ const ProfileModal: React.FC<Props> = ({ open, onClose, user, profile, onSubscri
   // User has Pro access if status is 'active' OR 'cancelling' (still in billing period)
   const isPro = profile?.subscription_status === 'active' || profile?.subscription_status === 'cancelling';
   const isCancelling = profile?.subscription_status === 'cancelling';
+
+  // Reset cancel confirmation when profile changes (e.g., after cancellation)
+  useEffect(() => {
+    if (isCancelling) {
+      setShowCancelConfirm(false);
+    }
+  }, [isCancelling]);
 
   const handlePasswordChange = async () => {
     if (newPassword.length < 6) {
@@ -96,7 +103,8 @@ const ProfileModal: React.FC<Props> = ({ open, onClose, user, profile, onSubscri
 
       setMessage({ type: 'success', text: 'Subscription cancelled. You will retain access until the end of your billing period.' });
       setShowCancelConfirm(false);
-      onSubscriptionCancelled();
+      // Reload profile to get updated status
+      await onSubscriptionCancelled();
     } catch (err) {
       setMessage({ 
         type: 'error', 

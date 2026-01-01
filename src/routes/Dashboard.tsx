@@ -187,7 +187,7 @@ export default function Dashboard() {
 
     // Check upload limit - use actual guidelines count for accuracy
     const subscriptionStatus = profile?.subscription_status;
-    const isFree = !subscriptionStatus || subscriptionStatus === 'inactive';
+    const isFree = !subscriptionStatus || (subscriptionStatus !== 'active' && subscriptionStatus !== 'cancelling');
     const uploadLimit = isFree ? FREE_UPLOAD_LIMIT : Infinity;
 
     if (guidelines.length >= uploadLimit) {
@@ -498,7 +498,9 @@ export default function Dashboard() {
             <div className="text-left">
               <p className="text-xs font-medium text-slate-300">{user.email}</p>
               <p className="text-xs text-slate-500">
-                {profile?.subscription_status === 'active' ? 'Pro Account' : 'Free Account'}
+                {profile?.subscription_status === 'active' || profile?.subscription_status === 'cancelling' 
+                  ? 'Pro Account' 
+                  : 'Free Account'}
               </p>
             </div>
           </div>
@@ -508,7 +510,7 @@ export default function Dashboard() {
             <div className="h-6 w-px bg-slate-600 mr-3" />
             <div className="flex items-center gap-2 rounded-lg bg-slate-700/50 px-2 sm:px-3 py-1 sm:py-1.5">
               <span className="text-[10px] sm:text-xs font-medium text-slate-300">
-                {profile?.subscription_status === 'active' ? (
+                {profile?.subscription_status === 'active' || profile?.subscription_status === 'cancelling' ? (
                   <span className="text-brand-400">Pro</span>
                 ) : (
                   <span className={guidelines.length >= FREE_UPLOAD_LIMIT ? 'text-red-400' : 'text-brand-400'}>
@@ -522,7 +524,7 @@ export default function Dashboard() {
         
         {/* Right side - Actions */}
         <div className="flex items-center gap-1.5 sm:gap-3">
-          {profile && profile.subscription_status !== 'active' && (
+          {profile && profile.subscription_status !== 'active' && profile.subscription_status !== 'cancelling' && (
             <button
               onClick={() => setPricingOpen(true)}
               className="rounded-lg bg-brand-600/20 border border-brand-600/50 px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-semibold text-brand-400 transition hover:bg-brand-600/30"
@@ -613,7 +615,7 @@ export default function Dashboard() {
           </div>
 
           {/* Limit Reached Banner */}
-          {profile?.subscription_status !== 'active' && guidelines.length >= FREE_UPLOAD_LIMIT && (
+          {profile?.subscription_status !== 'active' && profile?.subscription_status !== 'cancelling' && guidelines.length >= FREE_UPLOAD_LIMIT && (
             <LimitReachedBanner onUpgrade={() => setPricingOpen(true)} />
           )}
 

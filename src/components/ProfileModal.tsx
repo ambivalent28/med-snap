@@ -37,7 +37,9 @@ const ProfileModal: React.FC<Props> = ({ open, onClose, user, profile, onSubscri
   // Cancel subscription state
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
-  const isPro = profile?.subscription_status === 'active';
+  // User has Pro access if status is 'active' OR 'cancelling' (still in billing period)
+  const isPro = profile?.subscription_status === 'active' || profile?.subscription_status === 'cancelling';
+  const isCancelling = profile?.subscription_status === 'cancelling';
 
   const handlePasswordChange = async () => {
     if (newPassword.length < 6) {
@@ -276,16 +278,26 @@ const ProfileModal: React.FC<Props> = ({ open, onClose, user, profile, onSubscri
                             </p>
                           </div>
                           <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                            isPro 
-                              ? 'bg-brand-600/30 text-brand-300' 
-                              : 'bg-slate-600/50 text-slate-300'
+                            isCancelling
+                              ? 'bg-amber-600/30 text-amber-300'
+                              : isPro 
+                                ? 'bg-brand-600/30 text-brand-300' 
+                                : 'bg-slate-600/50 text-slate-300'
                           }`}>
-                            {isPro ? 'Active' : 'Free'}
+                            {isCancelling ? 'Cancels at period end' : isPro ? 'Active' : 'Free'}
                           </span>
                         </div>
                       </div>
 
-                      {isPro && !showCancelConfirm && (
+                      {/* Show message when subscription is cancelling */}
+                      {isCancelling && (
+                        <div className="rounded-lg bg-amber-900/20 border border-amber-700/50 px-4 py-3 text-sm text-amber-300">
+                          Your subscription has been cancelled and will end at the end of your billing period. You'll keep Pro access until then.
+                        </div>
+                      )}
+
+                      {/* Only show cancel button if Pro and NOT already cancelling */}
+                      {isPro && !isCancelling && !showCancelConfirm && (
                         <button
                           onClick={() => setShowCancelConfirm(true)}
                           className="w-full rounded-lg border border-red-600/50 bg-red-900/20 px-4 py-2.5 text-sm font-medium text-red-400 hover:bg-red-900/30 transition"
@@ -294,7 +306,7 @@ const ProfileModal: React.FC<Props> = ({ open, onClose, user, profile, onSubscri
                         </button>
                       )}
 
-                      {isPro && showCancelConfirm && (
+                      {isPro && !isCancelling && showCancelConfirm && (
                         <div className="rounded-xl bg-red-900/20 border border-red-600/50 p-4 space-y-3">
                           <div className="flex items-start gap-3">
                             <ExclamationTriangleIcon className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />

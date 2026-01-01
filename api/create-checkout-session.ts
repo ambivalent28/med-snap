@@ -46,7 +46,7 @@ export default async function handler(
 
     // Get origin from request headers
     const origin = req.headers.origin || 
-      (req.headers.host ? `https://${req.headers.host}` : 'https://medsnap.vercel.app');
+      (req.headers.host ? `https://${req.headers.host}` : 'https://medsnap.com.au');
 
     console.log('Creating checkout session:', { priceId, userId, origin });
 

@@ -154,7 +154,7 @@ export default function Landing() {
             <div className="flex-1 flex justify-center">
               <div className="flex items-center gap-2 rounded-lg bg-slate-900/50 px-4 py-1.5 text-xs text-slate-400">
                 <ShieldCheckIcon className="h-3 w-3 text-green-500" />
-                medsnap.app
+                medsnap.com.au
               </div>
             </div>
           </div>

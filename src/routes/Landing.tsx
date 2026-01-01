@@ -21,14 +21,16 @@ export default function Landing() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const { user, loading } = useAuth();
+  const { user, session, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && user) {
+    // Only redirect if we have a valid session (not just a user object)
+    // This prevents redirecting during sign out
+    if (!loading && user && session) {
       navigate('/dashboard');
     }
-  }, [user, loading, navigate]);
+  }, [user, session, loading, navigate]);
 
   const benefits = [
     {

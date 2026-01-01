@@ -470,8 +470,11 @@ export default function Dashboard() {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/');
+    const { error } = await signOut();
+    if (!error) {
+      // Use window.location to force a full page reload and clear all state
+      window.location.href = '/';
+    }
   };
 
   if (authLoading || !user) {

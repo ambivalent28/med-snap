@@ -350,5 +350,3 @@ const UploadModal: React.FC<Props> = ({ open, onClose, onSubmit, existingCategor
 };
 
 export default UploadModal;
-
-export default UploadModal;

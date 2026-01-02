@@ -105,12 +105,14 @@ export default async function handler(
           .single();
 
         if (profile) {
-          const isActive = subscription.status === 'active' || subscription.status === 'trialing';
+          // Check if subscription is cancelled at period end (user cancelled but still has access)
+          const isCancelling = subscription.cancel_at_period_end === true;
+          const isActive = (subscription.status === 'active' || subscription.status === 'trialing') && !isCancelling;
           
           await supabase
             .from('profiles')
             .update({
-              subscription_status: isActive ? 'active' : 'inactive',
+              subscription_status: isCancelling ? 'cancelling' : (isActive ? 'active' : 'inactive'),
               updated_at: new Date().toISOString(),
             })
             .eq('user_id', profile.user_id);

@@ -229,14 +229,32 @@ export default function Dashboard() {
       // We'll generate signed URLs when loading guidelines
       const storagePath = path;
 
+      // Validate and sanitize inputs
+      const title = form.title.trim().substring(0, 200); // Max 200 chars
+      const category = (form.category || 'General').trim().substring(0, 50); // Max 50 chars
+      const notes = form.notes ? form.notes.trim().substring(0, 1000) : null; // Max 1000 chars
+      
+      // Validate URL if provided
+      let sourceUrl = form.source_url ? form.source_url.trim() : null;
+      if (sourceUrl && sourceUrl.length > 0) {
+        try {
+          new URL(sourceUrl); // Validate URL format
+          sourceUrl = sourceUrl.substring(0, 500); // Max 500 chars
+        } catch {
+          throw new Error('Invalid URL format. Please enter a valid URL (e.g., https://example.com)');
+        }
+      } else {
+        sourceUrl = null;
+      }
+
       // Prepare guideline data
       const guidelineData = {
         user_id: user.id,
-        title: form.title,
-        category: form.category || 'General',
+        title,
+        category: category || 'General',
         tags: Array.isArray(form.tags) ? form.tags : [],
-        notes: form.notes || null,
-        source_url: form.source_url || null,
+        notes,
+        source_url: sourceUrl,
         file_path: storagePath,
         file_type: fileType
       };
@@ -326,7 +344,7 @@ export default function Dashboard() {
 
       if (error) {
         console.error('Error deleting guideline:', error);
-        alert('Failed to delete guideline. Please try again.');
+        console.error('Failed to delete guideline:', error);
         return;
       }
 
@@ -344,7 +362,7 @@ export default function Dashboard() {
       }
     } catch (error) {
       console.error('Error deleting guideline:', error);
-      alert('Failed to delete guideline. Please try again.');
+      console.error('Failed to delete guideline:', error);
     }
   };
 
@@ -361,7 +379,7 @@ export default function Dashboard() {
 
       if (error) {
         console.error('Error updating guideline category:', error);
-        alert('Failed to update category. Please try again.');
+        console.error('Failed to update category:', error);
         return;
       }
 
@@ -370,7 +388,7 @@ export default function Dashboard() {
       );
     } catch (error) {
       console.error('Error updating guideline category:', error);
-      alert('Failed to update category. Please try again.');
+      console.error('Failed to update category:', error);
     }
   };
 

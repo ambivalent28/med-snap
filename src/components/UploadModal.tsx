@@ -103,16 +103,30 @@ const UploadModal: React.FC<Props> = ({ open, onClose, onSubmit, existingCategor
   });
 
   const isValid = useMemo(() => {
-    return !!file && form.title.trim().length > 0 && form.confirmNoPhi === true;
+    const titleValid = form.title.trim().length > 0 && form.title.trim().length <= 200;
+    return !!file && titleValid && form.confirmNoPhi === true;
   }, [file, form.title, form.confirmNoPhi]);
 
   const handleSubmit = async () => {
     if (!file || !isValid) {
       if (!form.confirmNoPhi) {
         setError('Please confirm that this file contains no patient information.');
+      } else if (!form.title.trim()) {
+        setError('Title is required');
       }
       return;
     }
+    
+    // Validate URL if provided
+    if (form.source_url && form.source_url.trim().length > 0) {
+      try {
+        new URL(form.source_url.trim());
+      } catch {
+        setError('Invalid URL format. Please enter a valid URL (e.g., https://example.com)');
+        return;
+      }
+    }
+    
     setSubmitting(true);
     setError(null);
     try {
@@ -195,6 +209,7 @@ const UploadModal: React.FC<Props> = ({ open, onClose, onSubmit, existingCategor
                   <label className="block text-xs font-medium text-slate-400 mb-1.5">Title</label>
                   <input
                     type="text"
+                    maxLength={200}
                     className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-brand-500 focus:outline-none"
                     value={form.title}
                     onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
@@ -257,6 +272,7 @@ const UploadModal: React.FC<Props> = ({ open, onClose, onSubmit, existingCategor
                     <div>
                       <label className="block text-xs font-medium text-slate-500 mb-1">Note</label>
                       <textarea
+                        maxLength={1000}
                         className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-brand-500 focus:outline-none resize-none"
                         rows={2}
                         value={form.notes}
@@ -277,6 +293,7 @@ const UploadModal: React.FC<Props> = ({ open, onClose, onSubmit, existingCategor
                       <label className="block text-xs font-medium text-slate-500 mb-1">Reference URL</label>
                       <input
                         type="url"
+                        maxLength={500}
                         className="w-full rounded-lg border border-slate-600 bg-slate-700 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-brand-500 focus:outline-none"
                         value={form.source_url}
                         onChange={(e) => setForm(prev => ({ ...prev, source_url: e.target.value }))}
@@ -331,5 +348,7 @@ const UploadModal: React.FC<Props> = ({ open, onClose, onSubmit, existingCategor
     </Transition>
   );
 };
+
+export default UploadModal;
 
 export default UploadModal;

@@ -129,15 +129,51 @@ const ViewerModal: React.FC<Props> = ({ open, guideline, onClose, onUpdate, onDe
 
   const handleSave = async () => {
     if (!guideline || !onUpdate) return;
+    
+    // Validate inputs
+    const title = editForm.title.trim();
+    if (!title || title.length === 0) {
+      setError('Title is required');
+      return;
+    }
+    if (title.length > 200) {
+      setError('Title must be 200 characters or less');
+      return;
+    }
+    
+    const category = (editForm.category || 'General').trim();
+    if (category.length > 50) {
+      setError('Category name must be 50 characters or less');
+      return;
+    }
+    
+    let sourceUrl = editForm.source_url ? editForm.source_url.trim() : null;
+    if (sourceUrl && sourceUrl.length > 0) {
+      try {
+        new URL(sourceUrl);
+        if (sourceUrl.length > 500) {
+          setError('URL must be 500 characters or less');
+          return;
+        }
+      } catch {
+        setError('Invalid URL format. Please enter a valid URL (e.g., https://example.com)');
+        return;
+      }
+    } else {
+      sourceUrl = null;
+    }
+    
+    const notes = editForm.notes ? editForm.notes.trim().substring(0, 1000) : null;
+    
     setSaving(true);
     setError(null);
     try {
       await onUpdate(guideline, {
-        title: editForm.title,
-        category: editForm.category,
+        title,
+        category: category || 'General',
         tags: [], // Keep empty array for backend compatibility
-        notes: editForm.notes || null,
-        source_url: editForm.source_url || null
+        notes,
+        source_url: sourceUrl
       }, newFile || undefined);
       setIsEditing(false);
       setNewFile(null);
@@ -170,6 +206,13 @@ const ViewerModal: React.FC<Props> = ({ open, guideline, onClose, onUpdate, onDe
 
   const handleAddCategory = () => {
     const trimmed = newCategoryName.trim();
+    if (!trimmed) return;
+    
+    if (trimmed.length > 50) {
+      setError('Category name must be 50 characters or less');
+      return;
+    }
+    
     if (trimmed && !existingCategories.includes(trimmed) && !localCategories.includes(trimmed)) {
       setLocalCategories(prev => [...prev, trimmed]);
       setEditForm(prev => ({ ...prev, category: trimmed }));
@@ -248,6 +291,7 @@ const ViewerModal: React.FC<Props> = ({ open, guideline, onClose, onUpdate, onDe
                   {isEditing ? (
                     <input
                       type="text"
+                      maxLength={200}
                       value={editForm.title}
                       onChange={(e) => setEditForm(prev => ({ ...prev, title: e.target.value }))}
                       className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-white focus:border-brand-500 focus:outline-none"
@@ -344,6 +388,7 @@ const ViewerModal: React.FC<Props> = ({ open, guideline, onClose, onUpdate, onDe
                       <div className="flex gap-2 mt-2">
                         <input
                           type="text"
+                          maxLength={50}
                           value={newCategoryName}
                           onChange={(e) => setNewCategoryName(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
@@ -366,6 +411,7 @@ const ViewerModal: React.FC<Props> = ({ open, guideline, onClose, onUpdate, onDe
                       <div>
                         <label className="block text-xs font-medium text-slate-500 mb-1">Note</label>
                         <textarea
+                          maxLength={1000}
                           value={editForm.notes}
                           onChange={(e) => setEditForm(prev => ({ ...prev, notes: e.target.value }))}
                           placeholder="Personal notes..."
@@ -386,6 +432,7 @@ const ViewerModal: React.FC<Props> = ({ open, guideline, onClose, onUpdate, onDe
                         <label className="block text-xs font-medium text-slate-500 mb-1">Reference URL</label>
                         <input
                           type="url"
+                          maxLength={500}
                           value={editForm.source_url}
                           onChange={(e) => setEditForm(prev => ({ ...prev, source_url: e.target.value }))}
                           placeholder="https://..."

@@ -9,7 +9,6 @@ import {
   MagnifyingGlassIcon,
   EyeIcon,
   ShieldCheckIcon,
-  ArrowPathIcon,
   PlusIcon
 } from '@heroicons/react/24/solid';
 import { useState, useEffect } from 'react';

@@ -445,14 +445,32 @@ export default function Dashboard() {
         newFilePath = signedUrl || path;
       }
 
+      // Validate and sanitize update data
+      const title = updates.title ? updates.title.trim().substring(0, 200) : guideline.title;
+      const category = (updates.category || 'General').trim().substring(0, 50);
+      const notes = updates.notes ? updates.notes.trim().substring(0, 1000) : null;
+      
+      // Validate URL if provided
+      let sourceUrl = updates.source_url ? updates.source_url.trim() : null;
+      if (sourceUrl && sourceUrl.length > 0) {
+        try {
+          new URL(sourceUrl);
+          sourceUrl = sourceUrl.substring(0, 500);
+        } catch {
+          throw new Error('Invalid URL format. Please enter a valid URL (e.g., https://example.com)');
+        }
+      } else {
+        sourceUrl = null;
+      }
+
       const { error } = await supabase
         .from('guidelines')
         .update({
-          title: updates.title,
-          category: updates.category || 'General',
-          tags: updates.tags,
-          notes: updates.notes,
-          source_url: updates.source_url,
+          title,
+          category: category || 'General',
+          tags: updates.tags || [],
+          notes,
+          source_url: sourceUrl,
           ...(newFile && { 
             file_path: newFilePath.includes('://') ? newFilePath.split('/').pop() : newFilePath,
             file_type: newFileType 

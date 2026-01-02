@@ -137,20 +137,23 @@ export default function Landing() {
       <section className="mx-auto max-w-7xl px-4 sm:px-6 pt-6 sm:pt-10 md:pt-16 pb-8 sm:pb-12 md:pb-20">
         <div className="text-center">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-slate-100 leading-tight px-2">
-            Stop re-Googling the same
-            <br className="hidden sm:block" />
-            <span className="sm:hidden"> </span>
-            <span className="text-brand-500">clinical guidelines.</span>
+            Stop re-Googling the same clinical guidelines.
           </h1>
           <p className="mx-auto mt-4 sm:mt-6 md:mt-8 max-w-3xl text-base sm:text-lg md:text-xl lg:text-2xl text-slate-300 leading-relaxed px-2">
-            Your personal clinical library. Upload trusted PDFs, screenshots, and reference documents. Access them from anywhere you work.
+            A simple place to store the clinical documents you actually reuse —
+            so you can find them instantly when you need them.
+          </p>
+          <p className="mx-auto mt-4 sm:mt-6 max-w-3xl text-sm sm:text-base md:text-lg text-slate-400 leading-relaxed px-2">
+            Think referral criteria screenshots, sepsis protocols, imaging guidelines,
+            or hospital PDFs you know you'll need again — but can never find when
+            you're on shift.
           </p>
           <div className="mt-6 sm:mt-8 md:mt-10 flex flex-col items-center justify-center gap-3 sm:gap-4">
             <button
               onClick={() => { setAuthMode('signup'); setAuthModalOpen(true); }}
               className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 text-base sm:text-lg md:text-xl font-bold text-white shadow-lg transition hover:bg-brand-700 active:scale-95"
             >
-              Join MedSnap, Free
+              Try MedSnap — free
               <ArrowRightIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6" />
             </button>
             <p className="text-xs sm:text-sm md:text-base text-slate-400">10 free uploads • No credit card required</p>
@@ -258,7 +261,9 @@ export default function Landing() {
               You know you saved that sepsis protocol somewhere. But where? In your downloads? Bookmarks? Email? That folder you created last month?
             </p>
             <p className="text-base sm:text-lg md:text-xl text-slate-300 mb-4 sm:mb-6 leading-relaxed">
-              Every minute spent searching is a minute away from patient care. Stop the frustration. Stop the wasted time.
+              Time spent searching for documents adds up quickly.
+              MedSnap keeps everything in one place, so you're not digging through
+              folders, bookmarks, or browser history.
             </p>
             <div className="space-y-3 sm:space-y-4">
               <div className="flex items-start gap-2 sm:gap-3">
@@ -291,8 +296,8 @@ export default function Landing() {
                   <ClockIcon className="h-5 w-5 sm:h-6 sm:w-6 text-brand-400" />
                 </div>
                 <div>
-                  <p className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-100">10-15 min</p>
-                  <p className="text-xs sm:text-sm md:text-base text-slate-400">Saved per shift</p>
+                  <p className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-100">Less time searching.</p>
+                  <p className="text-xs sm:text-sm md:text-base text-slate-400">More time focused on patients.</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -353,10 +358,31 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Who This Is For */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-12 md:py-20">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-center text-2xl sm:text-3xl md:text-4xl font-bold text-slate-100 mb-6 sm:mb-8 px-2">Who MedSnap is for</h2>
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-start gap-3">
+              <span className="text-brand-500 text-xl sm:text-2xl">•</span>
+              <p className="text-base sm:text-lg md:text-xl text-slate-300 flex-1">Clinicians who screenshot guidelines or protocols</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-brand-500 text-xl sm:text-2xl">•</span>
+              <p className="text-base sm:text-lg md:text-xl text-slate-300 flex-1">Anyone tired of re-Googling the same documents</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-brand-500 text-xl sm:text-2xl">•</span>
+              <p className="text-base sm:text-lg md:text-xl text-slate-300 flex-1">People who want something simpler than folders or Notion</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 py-8 sm:py-12 md:py-20">
         <div className="mx-auto max-w-4xl rounded-xl sm:rounded-2xl bg-slate-800 border border-slate-700 p-5 sm:p-8 md:p-12">
-          <h2 className="text-center text-2xl sm:text-3xl md:text-4xl font-bold text-slate-100 mb-3 sm:mb-4">Simple Pricing</h2>
+          <h2 className="text-center text-2xl sm:text-3xl md:text-4xl font-bold text-slate-100 mb-3 sm:mb-4">Pricing (free to try)</h2>
           <p className="text-center text-base sm:text-lg md:text-xl text-slate-300 mb-6 sm:mb-8 md:mb-12">Full access. Upgrade when you need more uploads.</p>
 
           <div className="grid grid-cols-1 gap-4 sm:gap-6 md:gap-8 md:grid-cols-2">

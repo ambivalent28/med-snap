@@ -164,7 +164,12 @@ export default function Landing() {
 
       {/* App Preview - Hidden on mobile, shown on tablet+ */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 pb-12 sm:pb-20 hidden sm:block">
-        <div className="relative rounded-2xl border border-slate-700 bg-gradient-to-b from-slate-800 to-slate-900 p-2 shadow-2xl shadow-brand-900/20">
+        <div className="relative rounded-2xl border border-slate-700 bg-gradient-to-b from-slate-800 to-slate-900 p-2 shadow-2xl shadow-brand-900/20 pointer-events-none select-none">
+          {/* Preview Only Badge */}
+          <div className="absolute top-4 right-4 z-10 bg-slate-900/90 backdrop-blur-sm border border-slate-600 rounded-lg px-3 py-1.5 flex items-center gap-2">
+            <EyeIcon className="h-3.5 w-3.5 text-slate-400" />
+            <span className="text-xs font-medium text-slate-300">Preview Only</span>
+          </div>
           <div className="flex items-center gap-2 rounded-t-xl bg-slate-800 px-4 py-3 border-b border-slate-700">
             <div className="flex gap-1.5">
               <div className="w-3 h-3 rounded-full bg-red-500/80" />

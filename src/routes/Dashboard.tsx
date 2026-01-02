@@ -622,8 +622,9 @@ export default function Dashboard() {
             }}
             className="flex items-center gap-1.5 sm:gap-2 rounded-lg sm:rounded-xl bg-emerald-600 px-3 sm:px-5 py-1.5 sm:py-2.5 text-xs sm:text-sm font-bold text-white shadow-lg shadow-emerald-600/25 transition-all duration-200 hover:bg-emerald-500 hover:scale-105 hover:shadow-emerald-500/30 active:scale-95"
           >
+            <span className="sm:hidden">Upload</span>
             <PlusIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-            <span className="hidden xs:inline">Upload</span>
+            <span className="hidden sm:inline">Upload</span>
           </button>
         </div>
       </header>

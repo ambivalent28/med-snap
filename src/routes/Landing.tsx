@@ -16,6 +16,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthModal from '../components/AuthModal';
 import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../lib/supabase';
 
 export default function Landing() {
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -27,8 +28,25 @@ export default function Landing() {
   useEffect(() => {
     // Only redirect if we have a valid session (not just a user object)
     // This prevents redirecting during sign out
+    // Add a delay to ensure session state is stable after page load
     if (!loading && user && session) {
-      navigate('/dashboard');
+      const timer = setTimeout(() => {
+        // Double-check session is still valid before redirecting
+        supabase.auth.getSession().then(({ data: { session: currentSession }, error }) => {
+          if (error) {
+            console.error('Error checking session:', error);
+            return;
+          }
+          // Only redirect if we have a valid, non-expired session
+          if (currentSession && currentSession.user && currentSession.expires_at) {
+            const expiresAt = currentSession.expires_at * 1000; // Convert to milliseconds
+            if (expiresAt > Date.now()) {
+              navigate('/dashboard');
+            }
+          }
+        });
+      }, 300);
+      return () => clearTimeout(timer);
     }
   }, [user, session, loading, navigate]);
 

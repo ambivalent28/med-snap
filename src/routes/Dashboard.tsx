@@ -506,9 +506,32 @@ export default function Dashboard() {
   };
 
   const handleSignOut = async () => {
-    const { error } = await signOut();
-    if (!error) {
-      // Use window.location to force a full page reload and clear all state
+    try {
+      // Sign out from Supabase
+      const { error } = await signOut();
+      if (error) {
+        console.error('Sign out error:', error);
+      }
+      
+      // Clear all Supabase-related localStorage items
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.includes('supabase') || key.startsWith('sb-'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      
+      // Wait a moment for auth state to fully clear
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Force a full page reload to clear all React state and cached data
+      window.location.href = '/';
+    } catch (err) {
+      console.error('Sign out error:', err);
+      // Even if there's an error, clear storage and navigate away
+      localStorage.clear();
       window.location.href = '/';
     }
   };

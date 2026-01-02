@@ -410,10 +410,19 @@ export default function Landing() {
             <div className="rounded-lg sm:rounded-xl bg-slate-900 border border-slate-700 p-5 sm:p-6 md:p-8">
               <h3 className="text-lg sm:text-xl md:text-2xl font-semibold text-slate-100 mb-3 sm:mb-4">Pro</h3>
               <div className="mb-4 sm:mb-6">
-                <span className="text-base sm:text-lg md:text-xl text-slate-400">$</span><span className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-100">5</span>
-                <span className="text-slate-300 text-sm sm:text-base">/month</span>
+                <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-base sm:text-lg md:text-xl text-slate-400">$</span><span className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-100">5</span>
+                    <span className="text-slate-300 text-base sm:text-lg md:text-xl">/month</span>
+                  </div>
+                  <span className="text-slate-400 text-sm sm:text-base md:text-lg">or</span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-sm sm:text-base md:text-lg text-slate-400">$</span><span className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-100">25</span>
+                    <span className="text-slate-300 text-sm sm:text-base md:text-lg">/year</span>
+                  </div>
+                  <span className="text-xs sm:text-sm md:text-base text-slate-400">(save 58% with annual billing)</span>
+                </div>
               </div>
-              <div className="mb-4 sm:mb-6 text-xs sm:text-sm md:text-base text-slate-400">or $25/year (save 58%)</div>
               <ul className="space-y-2 sm:space-y-3 text-left mb-4 sm:mb-6">
                 <li className="flex items-center gap-2 text-xs sm:text-sm md:text-base text-slate-300">
                   <CheckIcon className="h-4 w-4 sm:h-5 sm:w-5 text-brand-500 flex-shrink-0" />

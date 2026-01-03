@@ -2,13 +2,11 @@ import {
   ArrowRightIcon, 
   CheckIcon, 
   ChevronDownIcon,
-  ClockIcon,
   CloudArrowUpIcon,
   FolderIcon,
   DocumentTextIcon,
   MagnifyingGlassIcon,
   EyeIcon,
-  ShieldCheckIcon,
   PlusIcon
 } from '@heroicons/react/24/solid';
 import { useState, useEffect } from 'react';
